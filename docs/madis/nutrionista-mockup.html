@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' https://static.balsamiq.com/prototype/v1/; style-src 'unsafe-inline' https://static.balsamiq.com/prototype/v1/; font-src https://static.balsamiq.com/prototype/v1/; img-src data: https:; connect-src 'none'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none';"/>
+    <title>Nutrionista Health Products Store</title>
+
+    <!-- Fonts -->
+    <link href="https://static.balsamiq.com/prototype/v1/css/noto-fonts.css" rel="stylesheet"/>
+    <link href="https://static.balsamiq.com/prototype/v1/css/material-symbols-outlined.css" rel="stylesheet"/>
+
+    <!-- Tailwind CSS -->
+    <script src="https://static.balsamiq.com/prototype/v1/js/tailwindcss-3.4.17.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#e6007a",
+                        "secondary": "#90ee90",
+                        "background": "#f8f8f8",
+                        "surface": "#ffffff",
+                        "border": "#dddddd",
+                        "text-main": "#000000",
+                        "text-muted": "#666666",
+                    },
+                    borderRadius: {
+                        "theme": "0.5rem",
+                        "theme-sm": "calc(0.5rem * 0.5)",
+                        "theme-lg": "calc(0.5rem * 1.5)",
+                    },
+                    boxShadow: {
+                        "theme": "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+                    },
+                    fontFamily: {
+                        "display": ["Noto Serif", "serif"],
+                        "body": ["Noto Sans", "sans-serif"],
+                        "sans": ["Noto Sans", "sans-serif"],
+                    },
+                },
+            },
+        }
+    </script>
+
+    <!-- Alpine.js Plugins -->
+    <script defer src="https://static.balsamiq.com/prototype/v1/js/alpinejs-collapse-3.14.9.min.js"></script>
+    <!-- Alpine.js -->
+    <script defer src="https://static.balsamiq.com/prototype/v1/js/alpinejs-3.14.9.min.js"></script>
+
+    <style>
+        /* Prevent flash of unstyled content */
+        [x-cloak] { display: none !important; }
+        .font-display { font-family: 'Noto Serif', serif; }
+        .font-body { font-family: 'Noto Sans', sans-serif; }
+    </style>
+
+</head>
+<body class="bg-background text-text-main font-body antialiased min-h-screen"
+      x-data="{ page: 'main', formData: {} }">
+
+<!-- Page: Home -->
+<div x-show="page === 'main'" x-cloak>
+  <header class="w-full bg-[#e0ffe0] border-b border-border">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 py-4 flex items-center justify-between">
+      <span data-control-id="2" class="text-xl font-bold text-[#333333]">Nutrionista</span>
+      <nav class="flex gap-6">
+        <a data-control-id="3" class="text-[#555555] hover:text-primary" @click.prevent="page = 'main'">Avaleht</a>
+        <a data-control-id="4" class="text-[#555555] hover:text-primary" @click.prevent="page = 'shop'">Tooted</a>
+        <a data-control-id="5" class="text-[#555555] hover:text-primary" @click.prevent="page = 'login'">Minu konto</a>
+        <a data-control-id="6" class="text-[#555555] hover:text-primary" @click.prevent="page = 'cart'">Ostukorv</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 md:px-6 py-12">
+    <section class="text-center mb-16">
+      <h1 data-control-id="7" class="text-4xl font-bold text-[#333333] mb-4">Tere tulemast Nutrionistasse!</h1>
+      <p data-control-id="8" class="text-lg text-[#666666]">Avasta parimad vitamiinid ja toidulisandid oma tervise toetamiseks.</p>
+      <div class="mt-8 flex justify-center gap-4">
+        <button @click="page = 'quiz'" class="bg-primary text-white px-8 py-3 rounded-theme shadow-theme hover:opacity-90 flex items-center gap-2">
+          <span class="material-symbols-outlined">assignment</span> Tee vitamiinitest
+        </button>
+      </div>
+    </section>
+
+    <section>
+      <h2 data-control-id="9" class="text-2xl font-bold text-[#333333] mb-8">Esiletõstetud Tooted</h2>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <!-- Product 1 -->
+        <div data-control-id="10" class="bg-surface rounded-theme-lg shadow-theme p-4 flex flex-col items-center text-center border border-border hover:border-primary transition-colors cursor-pointer" @click="page = 'product_detail'">
+          <div data-control-id="32" class="bg-gray-100 w-full h-32 rounded-theme mb-4 flex items-center justify-center text-text-muted">Vitamiin A</div>
+          <h3 data-control-id="11" class="text-lg font-semibold text-[#333333]">Vitamiin A</h3>
+          <p data-control-id="12" class="text-sm text-[#666666] my-2">Oluline nägemisele ja immuunsüsteemile.</p>
+          <span data-control-id="13" class="text-xl font-bold text-[#E6007A] mb-4">12.99 €</span>
+          <button data-control-id="14" class="bg-[#e6007a] text-white px-4 py-2 rounded-theme w-full hover:opacity-90">Vaata lähemalt</button>
+        </div>
+        <!-- Product 2 -->
+        <div data-control-id="15" class="bg-surface rounded-theme-lg shadow-theme p-4 flex flex-col items-center text-center border border-border hover:border-primary transition-colors cursor-pointer" @click="page = 'product_detail'">
+          <div data-control-id="33" class="bg-gray-100 w-full h-32 rounded-theme mb-4 flex items-center justify-center text-text-muted">Vitamiin C</div>
+          <h3 data-control-id="16" class="text-lg font-semibold text-[#333333]">Vitamiin C</h3>
+          <p data-control-id="17" class="text-sm text-[#666666] my-2">Tugevdab immuunsüsteemi.</p>
+          <span data-control-id="18" class="text-xl font-bold text-[#E6007A] mb-4">9.50 €</span>
+          <button data-control-id="19" class="bg-[#e6007a] text-white px-4 py-2 rounded-theme w-full hover:opacity-90">Vaata lähemalt</button>
+        </div>
+        <!-- Product 3 -->
+        <div data-control-id="20" class="bg-surface rounded-theme-lg shadow-theme p-4 flex flex-col items-center text-center border border-border hover:border-primary transition-colors cursor-pointer" @click="page = 'product_detail'">
+          <div data-control-id="34" class="bg-gray-100 w-full h-32 rounded-theme mb-4 flex items-center justify-center text-text-muted">Vitamiin D</div>
+          <h3 data-control-id="21" class="text-lg font-semibold text-[#333333]">Vitamiin D</h3>
+          <p data-control-id="22" class="text-sm text-[#666666] my-2">Hea luudele ja meeleolule.</p>
+          <span data-control-id="23" class="text-xl font-bold text-[#E6007A] mb-4">15.00 €</span>
+          <button data-control-id="24" class="bg-[#e6007a] text-white px-4 py-2 rounded-theme w-full hover:opacity-90">Vaata lähemalt</button>
+        </div>
+        <!-- Product 4 -->
+        <div data-control-id="25" class="bg-surface rounded-theme-lg shadow-theme p-4 flex flex-col items-center text-center border border-border hover:border-primary transition-colors cursor-pointer" @click="page = 'product_detail'">
+          <div data-control-id="35" class="bg-gray-100 w-full h-32 rounded-theme mb-4 flex items-center justify-center text-text-muted">B-kompleks</div>
+          <h3 data-control-id="26" class="text-lg font-semibold text-[#333333]">B-kompleks</h3>
+          <p data-control-id="27" class="text-sm text-[#666666] my-2">Energiaks ja närvisüsteemile.</p>
+          <span data-control-id="28" class="text-xl font-bold text-[#E6007A] mb-4">18.75 €</span>
+          <button data-control-id="29" class="bg-[#e6007a] text-white px-4 py-2 rounded-theme w-full hover:opacity-90">Vaata lähemalt</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="w-full bg-[#e0ffe0] border-t border-border mt-12">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 py-6 flex justify-between items-center">
+      <span data-control-id="30" class="text-[#333333]">© 2023 Nutrionista</span>
+      <div class="flex gap-4">
+        <a @click.prevent="page = 'blog'" class="text-sm text-[#555555] hover:underline">Blogi</a>
+        <a @click.prevent="page = 'faq'" class="text-sm text-[#555555] hover:underline">KKK</a>
+        <a @click.prevent="page = 'contact'" class="text-sm text-[#555555] hover:underline">Kontakt</a>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<!-- Page: Product Detail -->
+<div x-show="page === 'product_detail'" x-cloak>
+  <header class="w-full bg-[#e0ffe0] border-b border-border">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 py-4 flex items-center justify-between">
+      <span data-control-id="39" class="text-xl font-bold text-[#333333] cursor-pointer" @click="page = 'main'">Nutrionista</span>
+      <nav class="flex gap-6">
+        <a data-control-id="40" class="text-[#555555]" @click.prevent="page = 'main'">Avaleht</a>
+        <a data-control-id="41" class="text-[#555555]" @click.prevent="page = 'shop'">Tooted</a>
+        <a data-control-id="42" class="text-[#555555]" @click.prevent="page = 'login'">Minu konto</a>
+        <a data-control-id="43" class="text-[#555555]" @click.prevent="page = 'cart'">Ostukorv</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 md:px-6 py-12">
+    <div class="flex flex-col md:flex-row gap-12">
+      <!-- Left: Product Info -->
+      <div class="md:w-1/2">
+        <div data-control-id="70" class="bg-gray-200 w-full aspect-square rounded-theme-lg mb-6 flex items-center justify-center text-text-muted">Toote pilt</div>
+        <h1 data-control-id="44" class="text-3xl font-bold text-[#333333] mb-2">Vitamiin Nimi</h1>
+        <p data-control-id="45" class="text-lg text-[#666666] mb-6">Lühikirjeldus vitamiini kohta.</p>
+        <div data-control-id="46" class="text-4xl font-bold text-[#E6007A] mb-8">XX.XX €</div>
+        <button data-control-id="47" class="bg-[#e6007a] text-white px-8 py-4 rounded-theme shadow-theme hover:opacity-90 w-full flex items-center justify-center gap-2 text-lg">
+          <span class="material-symbols-outlined">shopping_cart</span> Lisab ostukorvi
+        </button>
+      </div>
+
+      <!-- Right: Details -->
+      <div class="md:w-1/2 space-y-8">
+        <div>
+          <h2 data-control-id="48" class="text-xl font-bold text-[#333333] mb-4">Funktsioonid</h2>
+          <ul class="space-y-2 text-[#555555]">
+            <li data-control-id="49" class="flex items-center gap-2"><span class="text-primary">•</span> Toetab immuunsüsteemi</li>
+            <li data-control-id="50" class="flex items-center gap-2"><span class="text-primary">•</span> Aitab kaasa energia tootmisele</li>
+            <li data-control-id="51" class="flex items-center gap-2"><span class="text-primary">•</span> Oluline luude tervisele</li>
+          </ul>
+        </div>
+
+        <div>
+          <h2 data-control-id="52" class="text-xl font-bold text-[#333333] mb-4">Imendumismeetodid</h2>
+          <ul class="space-y-2 text-[#555555]">
+            <li data-control-id="53" class="flex items-center gap-2"><span class="text-primary">•</span> Rasvlahustuv</li>
+            <li data-control-id="54" class="flex items-center gap-2"><span class="text-primary">•</span> Vajab D-vitamiini</li>
+          </ul>
+        </div>
+
+        <div>
+          <h2 data-control-id="55" class="text-xl font-bold text-[#333333] mb-4">Koostoimed</h2>
+          <div class="space-y-3">
+            <div class="flex items-center justify-between p-3 bg-surface rounded-theme border border-border">
+              <span data-control-id="56" class="text-[#555555]">C-vitamiin:</span>
+              <div class="flex items-center gap-2">
+                <div data-control-id="57" class="w-4 h-4 rounded-full bg-green-500"></div>
+                <span data-control-id="58" class="text-sm text-[#555555]">Hea</span>
+              </div>
+            </div>
+            <div class="flex items-center justify-between p-3 bg-surface rounded-theme border border-border">
+              <span data-control-id="59" class="text-[#555555]">Raud:</span>
+              <div class="flex items-center gap-2">
+                <div data-control-id="60" class="w-4 h-4 rounded-full bg-yellow-400"></div>
+                <span data-control-id="61" class="text-sm text-[#555555]">Neutraalne</span>
+              </div>
+            </div>
+            <div class="flex items-center justify-between p-3 bg-surface rounded-theme border border-border">
+              <span data-control-id="62" class="text-[#555555]">Tsink:</span>
+              <div class="flex items-center gap-2">
+                <div data-control-id="63" class="w-4 h-4 rounded-full bg-red-500"></div>
+                <span data-control-id="64" class="text-sm text-[#555555]">Halb</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h2 data-control-id="65" class="text-xl font-bold text-[#333333] mb-4">Puuduse sümptomid</h2>
+          <ul class="space-y-2 text-[#555555]">
+            <li data-control-id="66" class="flex items-center gap-2"><span class="text-primary">•</span> Väsimus</li>
+            <li data-control-id="67" class="flex items-center gap-2"><span class="text-primary">•</span> Nõrk immuunsüsteem</li>
+            <li data-control-id="68" class="flex items-center gap-2"><span class="text-primary">•</span> Lihasnõrkus</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="w-full bg-[#e0ffe0] border-t border-border mt-12">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 py-6">
+      <span data-control-id="69" class="text-[#333333]">© 2023 Nutrionista</span>
+    </div>
+  </footer>
+</div>
+
+<!-- Page: Login/Register -->
+<div x-show="page === 'login'" x-cloak>
+  <header class="w-full bg-[#e0ffe0] border-b border-border">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 py-4 flex items-center justify-between">
+      <span data-control-id="74" class="text-xl font-bold text-[#333333] cursor-pointer" @click="page = 'main'">Nutrionista</span>
+      <a data-control-id="75" class="text-[#555555]" @click.prevent="page = 'main'">Avaleht</a>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 md:px-6 py-20 flex justify-center">
+    <div data-control-id="76" class="bg-surface rounded-theme-lg shadow-theme p-8 w-full max-w-md border border-border">
+      <h1 data-control-id="77" class="text-2xl font-bold text-[#333333] mb-8 text-center">Sisselogimine / Registreerimine</h1>
+      
+      <form class="space-y-4">
+        <input data-control-id="78" type="text" x-model="formData['78']" placeholder="E-posti aadress" class="border border-border rounded-theme px-4 py-3 w-full focus:ring-2 focus:ring-primary outline-none">
+        <input data-control-id="79" type="password" x-model="formData['79']" placeholder="Parool" class="border border-border rounded-theme px-4 py-3 w-full focus:ring-2 focus:ring-primary outline-none">
+        <button data-control-id="80" type="button" @click="page = 'profile'" class="bg-[#e6007a] text-white px-4 py-3 rounded-theme shadow-theme hover:opacity-90 w-full font-semibold">Logi sisse</button>
+      </form>
+
+      <div class="flex items-center my-6">
+        <div class="flex-1 border-t border-border"></div>
+        <span data-control-id="81" class="px-4 text-[#666666] text-sm">või</span>
+        <div class="flex-1 border-t border-border"></div>
+      </div>
+
+      <button data-control-id="82" @click="page = 'profile'" class="bg-[#90ee90] text-[#333333] px-4 py-3 rounded-theme shadow-theme hover:opacity-90 w-full font-semibold border border-[#7cfc00]">Loo uus konto</button>
+    </div>
+  </main>
+
+  <footer class="w-full bg-[#e0ffe0] border-t border-border fixed bottom-0">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 py-6">
+      <span data-control-id="83" class="text-[#333333]">© 2023 Nutrionista</span>
+    </div>
+  </footer>
+</div>
+
+<!-- Page: Cart -->
+<div x-show="page === 'cart'" x-cloak>
+  <header class="w-full bg-[#e0ffe0] border-b border-border">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 py-4 flex items-center justify-between">
+      <span data-control-id="87" class="text-xl font-bold text-[#333333] cursor-pointer" @click="page = 'main'">Nutrionista</span>
+      <nav class="flex gap-6">
+        <a data-control-id="88" class="text-[#555555]" @click.prevent="page = 'main'">Avaleht</a>
+        <a data-control-id="89" class="text-[#555555]" @click.prevent="page = 'shop'">Tooted</a>
+        <a data-control-id="90" class="text-[#555555]" @click.prevent="page = 'login'">Minu konto</a>
+        <a data-control-id="91" class="text-[#555555]" @click.prevent="page = 'cart'">Ostukorv</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 md:px-6 py-12">
+    <h1 data-control-id="92" class="text-3xl font-bold text-[#333333] mb-8">Ostukorv</h1>
+    
+    <div class="space-y-4 mb-12">
+      <!-- Item 1 -->
+      <div data-control-id="93" class="bg-surface rounded-theme-lg border border-[#eeeeee] p-4 flex items-center justify-between shadow-sm">
+        <div class="flex items-center gap-4">
+          <div data-control-id="113" class="w-16 h-16 bg-gray-100 rounded-theme"></div>
+          <div>
+            <p data-control-id="94" class="font-semibold text-[#333333]">Vitamiin A</p>
+            <div class="flex items-center gap-2 mt-1">
+              <span data-control-id="95" class="text-sm text-[#666666]">12.50 € x</span>
+              <div data-control-id="96" class="border border-[#cccccc] rounded px-2 py-0.5 text-sm">2</div>
+            </div>
+          </div>
+        </div>
+        <button data-control-id="97" class="bg-[#ff69b4] text-white px-4 py-1.5 rounded-theme text-sm hover:opacity-90">Eemalda</button>
+      </div>
+
+      <!-- Item 2 -->
+      <div data-control-id="98" class="bg-surface rounded-theme-lg border border-[#eeeeee] p-4 flex items-center justify-between shadow-sm">
+        <div class="flex items-center gap-4">
+          <div data-control-id="114" class="w-16 h-16 bg-gray-100 rounded-theme"></div>
+          <div>
+            <p data-control-id="99" class="font-semibold text-[#333333]">Vitamiin B kompleks</p>
+            <div class="flex items-center gap-2 mt-1">
+              <span data-control-id="100" class="text-sm text-[#666666]">25.00 € x</span>
+              <div data-control-id="101" class="border border-[#cccccc] rounded px-2 py-0.5 text-sm">1</div>
+            </div>
+          </div>
+        </div>
+        <button data-control-id="102" class="bg-[#ff69b4] text-white px-4 py-1.5 rounded-theme text-sm hover:opacity-90">Eemalda</button>
+      </div>
+
+      <!-- Item 3 -->
+      <div data-control-id="103" class="bg-surface rounded-theme-lg border border-[#eeeeee] p-4 flex items-center justify-between shadow-sm">
+        <div class="flex items-center gap-4">
+          <div data-control-id="115" class="w-16 h-16 bg-gray-100 rounded-theme"></div>
+          <div>
+            <p data-control-id="104" class="font-semibold text-[#333333]">Vitamiin C</p>
+            <div class="flex items-center gap-2 mt-1">
+              <span data-control-id="105" class="text-sm text-[#666666]">8.75 € x</span>
+              <div data-control-id="106" class="border border-[#cccccc] rounded px-2 py-0.5 text-sm">3</div>
+            </div>
+          </div>
+        </div>
+        <button data-control-id="107" class="bg-[#ff69b4] text-white px-4 py-1.5 rounded-theme text-sm hover:opacity-90">Eemalda</button>
+      </div>
+    </div>
+
+    <div data-control-id="108" class="bg-surface rounded-theme-lg border border-[#eeeeee] p-6 flex flex-col items-end gap-4 shadow-sm">
+      <div class="flex items-center gap-4">
+        <span data-control-id="109" class="text-lg font-bold text-[#333333]">Koguhind:</span>
+        <span data-control-id="110" class="text-2xl font-bold text-[#E6007A]">81.25 €</span>
+      </div>
+      <button data-control-id="111" @click="page = 'checkout'" class="bg-[#e6007a] text-white px-8 py-3 rounded-theme shadow-theme hover:opacity-90 text-lg font-semibold">Mine maksma</button>
+    </div>
+  </main>
+
+  <footer class="w-full bg-[#e0ffe0] border-t border-border mt-12">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 py-6">
+      <span data-control-id="112" class="text-[#333333]">© 2023 Nutrionista</span>
+    </div>
+  </footer>
+</div>
+
+<!-- Page: Checkout -->
+<div x-show="page === 'checkout'" x-cloak>
+  <header class="w-full bg-[#e0ffe0] border-b border-border">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 py-4 flex items-center justify-between">
+      <span data-control-id="119" class="text-xl font-bold text-[#333333] cursor-pointer" @click="page = 'main'">Nutrionista</span>
+      <nav class="flex gap-6">
+        <a data-control-id="120" class="text-[#555555]" @click.prevent="page = 'main'">Avaleht</a>
+        <a data-control-id="121" class="text-[#555555]" @click.prevent="page = 'cart'">Ostukorv</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-3xl mx-auto px-4 md:px-6 py-12">
+    <h1 data-control-id="122" class="text-3xl font-bold text-[#333333] mb-8">Kassa</h1>
+    
+    <div data-control-id="123" class="bg-surface rounded-theme-lg p-8 shadow-theme border border-border space-y-8">
+      <!-- Shipping -->
+      <section class="space-y-4">
+        <h2 data-control-id="124" class="text-xl font-bold text-[#333333]">Tarneandmed</h2>
+        <div class="grid grid-cols-1 gap-4">
+          <div>
+            <label data-control-id="125" class="block text-sm font-bold text-[#555555] mb-1">Täisnimi:</label>
+            <input data-control-id="126" type="text" x-model="formData['126']" placeholder="Sisesta täisnimi" class="border border-border rounded-theme px-4 py-2.5 w-full">
+          </div>
+          <div>
+            <label data-control-id="127" class="block text-sm font-bold text-[#555555] mb-1">Aadress:</label>
+            <input data-control-id="128" type="text" x-model="formData['128']" placeholder="Sisesta aadress" class="border border-border rounded-theme px-4 py-2.5 w-full">
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label data-control-id="129" class="block text-sm font-bold text-[#555555] mb-1">Linn:</label>
+              <input data-control-id="130" type="text" x-model="formData['130']" placeholder="Sisesta linn" class="border border-border rounded-theme px-4 py-2.5 w-full">
+            </div>
+            <div>
+              <label data-control-id="131" class="block text-sm font-bold text-[#555555] mb-1">Postiindeks:</label>
+              <input data-control-id="132" type="text" x-model="formData['132']" placeholder="Sisesta postiindeks" class="border border-border rounded-theme px-4 py-2.5 w-full">
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label data-control-id="133" class="block text-sm font-bold text-[#555555] mb-1">E-post:</label>
+              <input data-control-id="134" type="email" x-model="formData['134']" placeholder="Sisesta e-post" class="border border-border rounded-theme px-4 py-2.5 w-full">
+            </div>
+            <div>
+              <label data-control-id="135" class="block text-sm font-bold text-[#555555] mb-1">Telefon:</label>
+              <input data-control-id="136" type="tel" x-model="formData['136']" placeholder="Sisesta telefoninumber" class="border border-border rounded-theme px-4 py-2.5 w-full">
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Payment -->
+      <section data-control-id="137" class="space-y-4 pt-8 border-t border-border">
+        <h2 data-control-id="138" class="text-xl font-bold text-[#333333]">Makseandmed</h2>
+        <div class="space-y-4">
+          <div>
+            <label data-control-id="139" class="block text-sm font-bold text-[#555555] mb-1">Kaardi number:</label>
+            <input data-control-id="140" type="text" x-model="formData['140']" placeholder="XXXX XXXX XXXX XXXX" class="border border-border rounded-theme px-4 py-2.5 w-full">
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label data-control-id="141" class="block text-sm font-bold text-[#555555] mb-1">Kehtivusaeg (MM/AA):</label>
+              <input data-control-id="142" type="text" x-model="formData['142']" placeholder="MM/AA" class="border border-border rounded-theme px-4 py-2.5 w-full">
+            </div>
+            <div>
+              <label data-control-id="143" class="block text-sm font-bold text-[#555555] mb-1">CVV:</label>
+              <input data-control-id="144" type="text" x-model="formData['144']" placeholder="XXX" class="border border-border rounded-theme px-4 py-2.5 w-full">
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <button data-control-id="145" @click="page = 'confirmation'" class="bg-[#e6007a] text-white px-4 py-4 rounded-theme shadow-theme hover:opacity-90 w-full font-bold text-lg mt-8">Kinnita tellimus</button>
+    </div>
+  </main>
+
+  <footer class="w-full bg-[#e0ffe0] border-t border-border mt-12">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 py-6">
+      <span data-control-id="146" class="text-[#333333]">© 2023 Nutrionista</span>
+    </div>
+  </footer>
+</div>
+
+<!-- Page: Confirmation -->
+<div x-show="page === 'confirmation'" x-cloak>
+  <header class="w-full bg-[#e0ffe0] border-b border-border">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 py-4 flex items-center justify-between">
+      <span data-control-id="150" class="text-xl font-bold text-[#333333] cursor-pointer" @click="page = 'main'">Nutrionista</span>
+      <nav class="flex gap-6">
+        <a data-control-id="151" class="text-[#555555]" @click.prevent="page = 'main'">Avaleht</a>
+        <a data-control-id="152" class="text-[#555555]" @click.prevent="page = 'cart'">Ostukorv</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-3xl mx-auto px-4 md:px-6 py-20 text-center">
+    <div data-control-id="153" class="bg-surface rounded-theme-lg p-12 shadow-theme border border-border">
+      <span data-control-id="154" class="material-symbols-outlined text-6xl text-[#90ee90] mb-6">check_circle</span>
+      <h1 data-control-id="155" class="text-3xl font-bold text-[#333333] mb-4">Tellimus kinnitatud!</h1>
+      <p data-control-id="156" class="text-lg text-[#666666] mb-12">Täname teid tellimuse eest. Teie tellimus on edukalt esitatud ja töödeldakse peagi.</p>
+      
+      <div data-control-id="157" class="bg-gray-50 rounded-theme border border-border p-6 text-left mb-12">
+        <h2 data-control-id="158" class="text-xl font-bold text-[#333333] mb-6">Tellimuse kokkuvõte</h2>
+        <div class="space-y-4">
+          <div data-control-id="159" class="flex items-center justify-between border-b border-[#eeeeee] pb-4">
+            <div class="flex items-center gap-4">
+              <div data-control-id="170" class="w-12 h-12 bg-white rounded border border-border"></div>
+              <div>
+                <p data-control-id="160" class="font-semibold text-[#333333]">Vitamiin Nimi 1</p>
+                <p data-control-id="161" class="text-sm text-[#666666]">15.00 € x 2</p>
+              </div>
+            </div>
+          </div>
+          <div data-control-id="162" class="flex items-center justify-between border-b border-[#eeeeee] pb-4">
+            <div class="flex items-center gap-4">
+              <div data-control-id="171" class="w-12 h-12 bg-white rounded border border-border"></div>
+              <div>
+                <p data-control-id="163" class="font-semibold text-[#333333]">Vitamiin Nimi 2</p>
+                <p data-control-id="164" class="text-sm text-[#666666]">25.50 € x 1</p>
+              </div>
+            </div>
+          </div>
+          <div class="flex justify-between items-center pt-4">
+            <span data-control-id="166" class="text-lg font-bold text-[#333333]">Kogusumma:</span>
+            <span data-control-id="167" class="text-xl font-bold text-[#E6007A]">55.50 €</span>
+          </div>
+        </div>
+      </div>
+
+      <button data-control-id="168" @click="page = 'main'" class="bg-[#e6007a] text-white px-8 py-3 rounded-theme shadow-theme hover:opacity-90 font-bold">Tagasi avalehele</button>
+    </div>
+  </main>
+
+  <footer class="w-full bg-[#e0ffe0] border-t border-border fixed bottom-0">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 py-6">
+      <span data-control-id="169" class="text-[#333333]">© 2023 Nutrionista</span>
+    </div>
+  </footer>
+</div>
+
+<!-- Page: Shop (E-pood) -->
+<div x-show="page === 'shop'" x-cloak>
+  <header class="w-full bg-[#e0ffe0] border-b border-border">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 py-4 flex items-center justify-between">
+      <span data-control-id="184" class="text-xl font-bold text-[#333333] cursor-pointer" @click="page = 'main'">Nutrionista</span>
+      <nav class="flex gap-6">
+        <a data-control-id="185" class="text-[#555555]" @click.prevent="page = 'main'">Avaleht</a>
+        <a data-control-id="186" class="text-[#555555]" @click.prevent="page = 'shop'">Tooted</a>
+        <a data-control-id="187" class="text-[#555555]" @click.prevent="page = 'login'">Minu konto</a>
+        <a data-control-id="188" class="text-[#555555]" @click.prevent="page = 'cart'">Ostukorv</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 md:px-6 py-12">
+    <h1 data-control-id="189" class="text-3xl font-bold text-[#333333] mb-8">Vitamiinid ja Toidulisandid</h1>
+    
+    <!-- Filters -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-12">
+      <div>
+        <label data-control-id="190" class="block text-sm font-bold text-[#555555] mb-1">Kategooria:</label>
+        <div data-control-id="191" class="bg-[#efefef] border border-[#cccccc] rounded-theme px-4 py-2 flex items-center justify-between cursor-pointer">
+          <span>Kõik</span>
+          <span data-control-id="192" class="material-symbols-outlined text-sm">expand_content</span>
+        </div>
+      </div>
+      <div>
+        <label data-control-id="193" class="block text-sm font-bold text-[#555555] mb-1">Hind:</label>
+        <div data-control-id="194" class="bg-[#efefef] border border-[#cccccc] rounded-theme px-4 py-2 flex items-center justify-between cursor-pointer">
+          <span>Kõik</span>
+          <span data-control-id="195" class="material-symbols-outlined text-sm">expand_content</span>
+        </div>
+      </div>
+      <div>
+        <label data-control-id="196" class="block text-sm font-bold text-[#555555] mb-1">Bränd:</label>
+        <div data-control-id="197" class="bg-[#efefef] border border-[#cccccc] rounded-theme px-4 py-2 flex items-center justify-between cursor-pointer">
+          <span>Kõik</span>
+          <span data-control-id="198" class="material-symbols-outlined text-sm">expand_content</span>
+        </div>
+      </div>
+      <div>
+        <label data-control-id="199" class="block text-sm font-bold text-[#555555] mb-1">Eesmärk:</label>
+        <div data-control-id="200" class="bg-[#efefef] border border-[#cccccc] rounded-theme px-4 py-2 flex items-center justify-between cursor-pointer">
+          <span>Kõik</span>
+          <span data-control-id="201" class="material-symbols-outlined text-sm">expand_content</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Product Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-16">
+      <!-- Product 1 -->
+      <div data-control-id="205" class="bg-surface rounded-theme-lg border border-border p-4 flex flex-col items-center text-center">
+        <div data-control-id="262" class="w-full h-32 bg-gray-100 rounded-theme mb-4"></div>
+        <h3 data-control-id="206" class="font-semibold text-[#333333]">Vitamiin C</h3>
+        <p data-control-id="207" class="text-xs text-[#666666] my-1">Immuunsuse toetuseks</p>
+        <span data-control-id="208" class="text-lg font-bold text-[#E6007A] mb-4">12.99 €</span>
+        <button data-control-id="209" @click="page = 'product_detail'" class="bg-[#e6007a] text-white px-4 py-2 rounded-theme w-full text-sm">Vaata lähemalt</button>
+      </div>
+      <!-- Product 2 -->
+      <div data-control-id="210" class="bg-surface rounded-theme-lg border border-border p-4 flex flex-col items-center text-center">
+        <div data-control-id="263" class="w-full h-32 bg-gray-100 rounded-theme mb-4"></div>
+        <h3 data-control-id="211" class="font-semibold text-[#333333]">D-vitamiin</h3>
+        <p data-control-id="212" class="text-xs text-[#666666] my-1">Luude ja hammaste heaks</p>
+        <span data-control-id="213" class="text-lg font-bold text-[#E6007A] mb-4">9.50 €</span>
+        <button data-control-id="214" @click="page = 'product_detail'" class="bg-[#e6007a] text-white px-4 py-2 rounded-theme w-full text-sm">Vaata lähemalt</button>
+      </div>
+      <!-- Product 3 -->
+      <div data-control-id="215" class="bg-surface rounded-theme-lg border border-border p-4 flex flex-col items-center text-center">
+        <div data-control-id="264" class="w-full h-32 bg-gray-100 rounded-theme mb-4"></div>
+        <h3 data-control-id="216" class="font-semibold text-[#333333]">B-kompleks</h3>
+        <p data-control-id="217" class="text-xs text-[#666666] my-1">Energia ja närvisüsteem</p>
+        <span data-control-id="218" class="text-lg font-bold text-[#E6007A] mb-4">18.00 €</span>
+        <button data-control-id="219" @click="page = 'product_detail'" class="bg-[#e6007a] text-white px-4 py-2 rounded-theme w-full text-sm">Vaata lähemalt</button>
+      </div>
+      <!-- Product 4 -->
+      <div data-control-id="220" class="bg-surface rounded-theme-lg border border-border p-4 flex flex-col items-center text-center">
+        <div data-control-id="265" class="w-full h-32 bg-gray-100 rounded-theme mb-4"></div>
+        <h3 data-control-id="221" class="font-semibold text-[#333333]">Magneesium</h3>
+        <p data-control-id="222" class="text-xs text-[#666666] my-1">Lihaste ja närvide tööks</p>
+        <span data-control-id="223" class="text-lg font-bold text-[#E6007A] mb-4">7.25 €</span>
+        <button data-control-id="224" @click="page = 'product_detail'" class="bg-[#e6007a] text-white px-4 py-2 rounded-theme w-full text-sm">Vaata lähemalt</button>
+      </div>
+    </div>
+
+    <!-- Bundles -->
+    <h2 data-control-id="245" class="text-2xl font-bold text-[#333333] mb-8">Populaarsed tootekomplektid</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <!-- Bundle 1 -->
+      <div data-control-id="246" class="bg-surface rounded-theme-lg border border-border p-6 flex flex-col items-center text-center">
+        <div data-control-id="270" class="w-full h-40 bg-gray-100 rounded-theme mb-4"></div>
+        <h3 data-control-id="247" class="font-semibold text-[#333333]">Immuunsuse Komplekt</h3>
+        <p data-control-id="248" class="text-sm text-[#666666] my-2">Vitamiin C, D ja Tsink</p>
+        <span data-control-id="249" class="text-xl font-bold text-[#E6007A] mb-4">35.00 €</span>
+        <button data-control-id="250" class="bg-[#e6007a] text-white px-6 py-2 rounded-theme w-full">Vaata komplekti</button>
+      </div>
+      <!-- Bundle 2 -->
+      <div data-control-id="251" class="bg-surface rounded-theme-lg border border-border p-6 flex flex-col items-center text-center">
+        <div data-control-id="271" class="w-full h-40 bg-gray-100 rounded-theme mb-4"></div>
+        <h3 data-control-id="252" class="font-semibold text-[#333333]">Energia Komplekt</h3>
+        <p data-control-id="253" class="text-sm text-[#666666] my-2">B-kompleks, Magneesium ja Raud</p>
+        <span data-control-id="254" class="text-xl font-bold text-[#E6007A] mb-4">42.50 €</span>
+        <button data-control-id="255" class="bg-[#e6007a] text-white px-6 py-2 rounded-theme w-full">Vaata komplekti</button>
+      </div>
+      <!-- Bundle 3 -->
+      <div data-control-id="256" class="bg-surface rounded-theme-lg border border-border p-6 flex flex-col items-center text-center">
+        <div data-control-id="272" class="w-full h-40 bg-gray-100 rounded-theme mb-4"></div>
+        <h3 data-control-id="257" class="font-semibold text-[#333333]">Sportlase Komplekt</h3>
+        <p data-control-id="258" class="text-sm text-[#666666] my-2">Kreatiin, Omega-3 ja Valgupulber</p>
+        <span data-control-id="259" class="text-xl font-bold text-[#E6007A] mb-4">60.00 €</span>
+        <button data-control-id="260" class="bg-[#e6007a] text-white px-6 py-2 rounded-theme w-full">Vaata komplekti</button>
+      </div>
+    </div>
+  </main>
+
+  <footer class="w-full bg-[#e0ffe0] border-t border-border mt-12">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 py-6">
+      <span data-control-id="261" class="text-[#333333]">© 2023 Nutrionista</span>
+    </div>
+  </footer>
+</div>
+
+<!-- Page: Quiz (Vitamiinitest) -->
+<div x-show="page === 'quiz'" x-cloak>
+  <header class="w-full bg-[#e0ffe0] border-b border-border">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 py-4 flex items-center justify-between">
+      <span data-control-id="276" class="text-xl font-bold text-[#333333] cursor-pointer" @click="page = 'main'">Nutrionista</span>
+      <nav class="flex gap-6">
+        <a data-control-id="277" class="text-[#555555]" @click.prevent="page = 'main'">Avaleht</a>
+        <a data-control-id="278" class="text-[#555555]" @click.prevent="page = 'shop'">Tooted</a>
+        <a data-control-id="279" class="text-[#555555]" @click.prevent="page = 'login'">Minu konto</a>
+        <a data-control-id="280" class="text-[#555555]" @click.prevent="page = 'cart'">Ostukorv</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto px-4 md:px-6 py-12">
+    <div data-control-id="281" class="bg-surface rounded-theme-lg p-10 shadow-theme border border-border">
+      <div class="text-center mb-12">
+        <h1 data-control-id="282" class="text-3xl font-bold text-[#333333] mb-4">Vitamiinitest</h1>
+        <p data-control-id="283" class="text-[#666666]">Vasta küsimustele oma elustiili, toitumise ja tervise kohta, et saada personaalseid vitamiinisoovitusi.</p>
+      </div>
+
+      <div class="space-y-10">
+        <!-- Q1 -->
+        <div class="space-y-4">
+          <h3 data-control-id="284" class="text-lg font-bold text-[#333333]">1. Kui tihti tarbid piimatooteid?</h3>
+          <div class="flex flex-col gap-3">
+            <label data-control-id="285" class="flex items-center gap-3 cursor-pointer"><input type="radio" name="q1" x-model="formData['q1']" value="daily" class="w-4 h-4 text-primary"> Iga päev</label>
+            <label data-control-id="286" class="flex items-center gap-3 cursor-pointer"><input type="radio" name="q1" x-model="formData['q1']" value="weekly" class="w-4 h-4 text-primary"> Mitu korda nädalas</label>
+            <label data-control-id="287" class="flex items-center gap-3 cursor-pointer"><input type="radio" name="q1" x-model="formData['q1']" value="rarely" class="w-4 h-4 text-primary"> Harva</label>
+            <label data-control-id="288" class="flex items-center gap-3 cursor-pointer"><input type="radio" name="q1" x-model="formData['q1']" value="never" class="w-4 h-4 text-primary"> Ei tarbi üldse</label>
+          </div>
+        </div>
+
+        <!-- Q2 -->
+        <div class="space-y-4">
+          <h3 data-control-id="289" class="text-lg font-bold text-[#333333]">2. Kas oled taimetoitlane või vegan?</h3>
+          <div class="flex flex-col gap-3">
+            <label data-control-id="290" class="flex items-center gap-3 cursor-pointer"><input type="radio" name="q2" x-model="formData['q2']" value="vegan" class="w-4 h-4 text-primary"> Jah, vegan</label>
+            <label data-control-id="291" class="flex items-center gap-3 cursor-pointer"><input type="radio" name="q2" x-model="formData['q2']" value="vegetarian" class="w-4 h-4 text-primary"> Jah, taimetoitlane</label>
+            <label data-control-id="292" class="flex items-center gap-3 cursor-pointer"><input type="radio" name="q2" x-model="formData['q2']" value="no" class="w-4 h-4 text-primary"> Ei</label>
+          </div>
+        </div>
+
+        <!-- Q3 -->
+        <div class="space-y-4">
+          <h3 data-control-id="293" class="text-lg font-bold text-[#333333]">3. Kui tihti viibid päikese käes (ilma päikesekaitsekreemita)?</h3>
+          <div class="flex flex-col gap-3">
+            <label data-control-id="294" class="flex items-center gap-3 cursor-pointer"><input type="radio" name="q3" x-model="formData['q3']" value="daily" class="w-4 h-4 text-primary"> Iga päev</label>
+            <label data-control-id="295" class="flex items-center gap-3 cursor-pointer"><input type="radio" name="q3" x-model="formData['q3']" value="weekly" class="w-4 h-4 text-primary"> Mitu korda nädalas</label>
+            <label data-control-id="296" class="flex items-center gap-3 cursor-pointer"><input type="radio" name="q3" x-model="formData['q3']" value="rarely" class="w-4 h-4 text-primary"> Harva</label>
+            <label data-control-id="297" class="flex items-center gap-3 cursor-pointer"><input type="radio" name="q3" x-model="formData['q3']" value="never" class="w-4 h-4 text-primary"> Peaaegu mitte kunagi</label>
+          </div>
+        </div>
+
+        <!-- Q4 -->
+        <div class="space-y-4">
+          <h3 data-control-id="298" class="text-lg font-bold text-[#333333]">4. Kas tunned tihti väsimust või energiapuudust?</h3>
+          <div class="flex flex-col gap-3">
+            <label data-control-id="299" class="flex items-center gap-3 cursor-pointer"><input type="radio" name="q4" x-model="formData['q4']" value="very_often" class="w-4 h-4 text-primary"> Jah, väga tihti</label>
+            <label data-control-id="300" class="flex items-center gap-3 cursor-pointer"><input type="radio" name="q4" x-model="formData['q4']" value="sometimes" class="w-4 h-4 text-primary"> Mõnikord</label>
+            <label data-control-id="301" class="flex items-center gap-3 cursor-pointer"><input type="radio" name="q4" x-model="formData['q4']" value="rarely" class="w-4 h-4 text-primary"> Harva</label>
+            <label data-control-id="302" class="flex items-center gap-3 cursor-pointer"><input type="radio" name="q4" x-model="formData['q4']" value="no" class="w-4 h-4 text-primary"> Ei</label>
+          </div>
+        </div>
+
+        <!-- Q5 -->
+        <div class="space-y-4">
+          <h3 data-control-id="303" class="text-lg font-bold text-[#333333]">5. Kas sul on mingeid kroonilisi haigusi või võtad regulaarselt ravimeid?</h3>
+          <textarea data-control-id="306" x-model="formData['306']" placeholder="Kirjelda lühidalt (valikuline)" class="border border-border rounded-theme px-4 py-3 w-full h-32 focus:ring-2 focus:ring-primary outline-none"></textarea>
+        </div>
+
+        <button data-control-id="304" @click="page = 'profile'" class="bg-[#e6007a] text-white px-8 py-4 rounded-theme shadow-theme hover:opacity-90 w-full font-bold text-lg">Esita vastused</button>
+      </div>
+    </div>
+  </main>
+
+  <footer class="w-full bg-[#e0ffe0] border-t border-border mt-12">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 py-6">
+      <span data-control-id="305" class="text-[#333333]">© 2023 Nutrionista</span>
+    </div>
+  </footer>
+</div>
+
+<!-- Page: Profile (Personaalne vitamiiniprofiil) -->
+<div x-show="page === 'profile'" x-cloak>
+  <header class="w-full bg-[#e0ffe0] border-b border-border">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 py-4 flex items-center justify-between">
+      <span data-control-id="310" class="text-xl font-bold text-[#333333] cursor-pointer" @click="page = 'main'">Nutrionista</span>
+      <nav class="flex gap-6">
+        <a data-control-id="311" class="text-[#555555]" @click.prevent="page = 'main'">Avaleht</a>
+        <a data-control-id="312" class="text-[#555555]" @click.prevent="page = 'shop'">Tooted</a>
+        <a data-control-id="313" class="text-[#555555]" @click.prevent="page = 'profile'">Minu konto</a>
+        <a data-control-id="314" class="text-[#555555]" @click.prevent="page = 'cart'">Ostukorv</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 md:px-6 py-12">
+    <h1 data-control-id="315" class="text-3xl font-bold text-[#333333] mb-8">Personaalne vitamiiniprofiil</h1>
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <!-- Risks -->
+      <div data-control-id="316" class="bg-surface rounded-theme-lg p-6 shadow-theme border border-border">
+        <h2 data-control-id="317" class="text-xl font-bold text-[#E6007A] mb-6">Sinu riskid</h2>
+        <ul class="space-y-4 text-[#555555]">
+          <li data-control-id="318" class="flex gap-2"><span>•</span> D-vitamiini puudus (madal päikese käes viibimine)</li>
+          <li data-control-id="319" class="flex gap-2"><span>•</span> B12-vitamiini puudus (taimetoitlus)</li>
+          <li data-control-id="320" class="flex gap-2"><span>•</span> Rauapuudus (rasked menstruatsioonid)</li>
+        </ul>
+        <button data-control-id="337" @click="page = 'order_history'" class="mt-8 bg-[#90ee90] text-[#333333] px-4 py-2 rounded-theme w-full flex items-center justify-center gap-2 border border-[#7cfc00]">
+          <span class="material-symbols-outlined text-sm">schedule</span> Tellimuste ajalugu
+        </button>
+      </div>
+
+      <!-- Recommendations -->
+      <div data-control-id="321" class="bg-surface rounded-theme-lg p-6 shadow-theme border border-border">
+        <h2 data-control-id="322" class="text-xl font-bold text-[#E6007A] mb-6">Soovitused</h2>
+        <ul class="space-y-4 text-[#555555]">
+          <li data-control-id="323" class="flex gap-2"><span>•</span> D-vitamiin 2000 IU päevas</li>
+          <li data-control-id="324" class="flex gap-2"><span>•</span> B12-vitamiin 1000 mcg nädalas</li>
+          <li data-control-id="325" class="flex gap-2"><span>•</span> Rauapreparaat koos C-vitamiiniga</li>
+          <li data-control-id="326" class="flex gap-2"><span>•</span> Magneesium õhtuti paremaks uneks</li>
+        </ul>
+        <button data-control-id="338" @click="page = 'wishlist'" class="mt-8 bg-[#90ee90] text-[#333333] px-4 py-2 rounded-theme w-full flex items-center justify-center gap-2 border border-[#7cfc00]">
+          <span class="material-symbols-outlined text-sm">favorite</span> Soovikorv
+        </button>
+      </div>
+
+      <!-- Purchased / Reminders -->
+      <div data-control-id="327" class="bg-surface rounded-theme-lg p-6 shadow-theme border border-border">
+        <h2 data-control-id="328" class="text-xl font-bold text-[#E6007A] mb-6">Ostetud vitamiinid</h2>
+        <div class="space-y-4">
+          <!-- Item 1 -->
+          <div data-control-id="329" class="bg-surface rounded-theme border border-[#eeeeee] p-3 flex gap-3">
+            <div data-control-id="341" class="w-12 h-12 bg-gray-100 rounded flex-shrink-0"></div>
+            <div class="flex-1">
+              <p data-control-id="330" class="text-sm font-bold text-[#333333]">D-vitamiin 2000 IU</p>
+              <p data-control-id="331" class="text-xs text-[#666666]">Järgmine meeldetuletus: 15.11.2023</p>
+            </div>
+            <button data-control-id="332" class="bg-[#e6007a] text-white px-2 py-1 rounded text-[10px] self-center">Telli uuesti</button>
+          </div>
+          <!-- Item 2 -->
+          <div data-control-id="333" class="bg-surface rounded-theme border border-[#eeeeee] p-3 flex gap-3">
+            <div data-control-id="342" class="w-12 h-12 bg-gray-100 rounded flex-shrink-0"></div>
+            <div class="flex-1">
+              <p data-control-id="334" class="text-sm font-bold text-[#333333]">Magneesiumtsitraat</p>
+              <p data-control-id="335" class="text-xs text-[#666666]">Järgmine meeldetuletus: 01.12.2023</p>
+            </div>
+            <button data-control-id="336" class="bg-[#e6007a] text-white px-2 py-1 rounded text-[10px] self-center">Telli uuesti</button>
+          </div>
+        </div>
+        <button data-control-id="339" @click="page = 'cart'" class="mt-8 bg-[#e6007a] text-white px-4 py-2 rounded-theme w-full flex items-center justify-center gap-2">
+          <span class="material-symbols-outlined text-sm">shopping_cart</span> Ostukorvi
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <footer class="w-full bg-[#e0ffe0] border-t border-border mt-12">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 py-6">
+      <span data-control-id="340" class="text-[#333333]">© 2023 Nutrionista</span>
+    </div>
+  </footer>
+</div>
+
+<!-- Page: Order History -->
+<div x-show="page === 'order_history'" x-cloak>
+  <header class="w-full bg-[#e0ffe0] border-b border-border">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 py-4 flex items-center justify-between">
+      <span data-control-id="346" class="text-xl font-bold text-[#333333] cursor-pointer" @click="page = 'main'">Nutrionista</span>
+      <nav class="flex gap-6">
+        <a data-control-id="347" class="text-[#555555]" @click.prevent="page = 'main'">Avaleht</a>
+        <a data-control-id="348" class="text-[#555555]" @click.prevent="page = 'shop'">Tooted</a>
+        <a data-control-id="349" class="text-[#555555]" @click.prevent="page = 'profile'">Minu konto</a>
+        <a data-control-id="350" class="text-[#555555]" @click.prevent="page = 'cart'">Ostukorv</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 md:px-6 py-12">
+    <h1 data-control-id="351" class="text-3xl font-bold text-[#333333] mb-8">Tellimuste ajalugu</h1>
+    
+    <div class="space-y-8">
+      <!-- Order 1 -->
+      <div data-control-id="352" class="bg-surface rounded-theme-lg p-8 shadow-theme border border-border">
+        <div class="flex justify-between items-start mb-6">
+          <div>
+            <h2 data-control-id="354" class="text-xl font-bold text-[#333333]">Tellimus #12345</h2>
+            <p data-control-id="355" class="text-sm text-[#666666]">Kuupäev: 2023-10-26</p>
+          </div>
+          <div class="text-right">
+            <p data-control-id="356" class="text-sm font-bold"><span class="text-[#666666]">Staatus:</span> <span class="text-[#16A34A]">Täidetud</span></p>
+            <p data-control-id="359" class="text-sm font-bold mt-1"><span class="text-[#666666]">Tellimuse summa:</span> <span class="text-[#E6007A]">45.99 €</span></p>
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+          <p data-control-id="357" class="text-sm text-[#666666]"><span class="font-bold">Kohaletoimetamise aadress:</span> Tänav 1, Linn, 12345</p>
+          <p data-control-id="358" class="text-sm text-[#666666]"><span class="font-bold">Makseviis:</span> Krediitkaart</p>
+        </div>
+
+        <h3 data-control-id="362" class="text-lg font-bold text-[#333333] mb-4">Tellimuse detailid:</h3>
+        <div class="space-y-3">
+          <div data-control-id="363" class="flex items-center justify-between p-4 bg-surface rounded-theme border border-[#eeeeee]">
+            <div class="flex items-center gap-4">
+              <div data-control-id="389" class="w-12 h-12 bg-gray-100 rounded"></div>
+              <div>
+                <p data-control-id="364" class="font-semibold text-[#333333]">Vitamiin A</p>
+                <p data-control-id="365" class="text-xs text-[#666666]">12.99 € x 2</p>
+              </div>
+            </div>
+            <span data-control-id="366" class="font-bold text-[#333333]">25.98 €</span>
+          </div>
+          <div data-control-id="367" class="flex items-center justify-between p-4 bg-surface rounded-theme border border-[#eeeeee]">
+            <div class="flex items-center gap-4">
+              <div data-control-id="390" class="w-12 h-12 bg-gray-100 rounded"></div>
+              <div>
+                <p data-control-id="368" class="font-semibold text-[#333333]">Vitamiin C</p>
+                <p data-control-id="369" class="text-xs text-[#666666]">10.00 € x 2</p>
+              </div>
+            </div>
+            <span data-control-id="370" class="font-bold text-[#333333]">20.00 €</span>
+          </div>
+        </div>
+        <div class="text-right mt-6">
+          <span data-control-id="371" class="text-xl font-bold text-[#E6007A]">Kokku: 45.99 €</span>
+        </div>
+      </div>
+
+      <!-- Order 2 -->
+      <div data-control-id="372" class="bg-surface rounded-theme-lg p-8 shadow-theme border border-border">
+        <div class="flex justify-between items-start mb-6">
+          <div>
+            <h2 data-control-id="374" class="text-xl font-bold text-[#333333]">Tellimus #12344</h2>
+            <p data-control-id="375" class="text-sm text-[#666666]">Kuupäev: 2023-09-15</p>
+          </div>
+          <div class="text-right">
+            <p data-control-id="376" class="text-sm font-bold"><span class="text-[#666666]">Staatus:</span> <span class="text-[#CA8A04]">Täidetud</span></p>
+            <p data-control-id="379" class="text-sm font-bold mt-1"><span class="text-[#666666]">Tellimuse summa:</span> <span class="text-[#E6007A]">25.50 €</span></p>
+          </div>
+        </div>
+        <div class="text-right mt-6">
+          <span data-control-id="387" class="text-xl font-bold text-[#E6007A]">Kokku: 25.50 €</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="w-full bg-[#e0ffe0] border-t border-border mt-12">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 py-6">
+      <span data-control-id="388" class="text-[#333333]">© 2023 Nutrionista</span>
+    </div>
+  </footer>
+</div>
+
+<!-- Page: Wishlist (Soovikorv) -->
+<div x-show="page === 'wishlist'" x-cloak>
+  <header class="w-full bg-[#e0ffe0] border-b border-border">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 py-4 flex items-center justify-between">
+      <span data-control-id="395" class="text-xl font-bold text-[#333333] cursor-pointer" @click="page = 'main'">Nutrionista</span>
+      <nav class="flex gap-6">
+        <a data-control-id="396" class="text-[#555555]" @click.prevent="page = 'main'">Avaleht</a>
+        <a data-control-id="397" class="text-[#555555]" @click.prevent="page = 'shop'">Tooted</a>
+        <a data-control-id="398" class="text-[#555555]" @click.prevent="page = 'profile'">Minu konto</a>
+        <a data-control-id="399" class="text-[#555555]" @click.prevent="page = 'cart'">Ostukorv</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 md:px-6 py-12">
+    <h1 data-control-id="400" class="text-3xl font-bold text-[#333333] mb-8">Soovikorv</h1>
+    
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <!-- Item 1 -->
+      <div data-control-id="401" class="bg-surface rounded-theme-lg border border-border p-4 flex flex-col items-center text-center">
+        <div data-control-id="420" class="w-full h-32 bg-gray-100 rounded-theme mb-4"></div>
+        <h3 data-control-id="402" class="font-semibold text-[#333333]">Vitamiin Nimi 1</h3>
+        <p data-control-id="403" class="text-xs text-[#666666] my-1">Lühikirjeldus</p>
+        <span data-control-id="404" class="text-lg font-bold text-[#E6007A] mb-4">15.99 €</span>
+        <div class="w-full space-y-2">
+          <button data-control-id="405" @click="page = 'product_detail'" class="bg-[#e6007a] text-white px-4 py-2 rounded-theme w-full text-sm">Vaata lähemalt</button>
+          <button data-control-id="406" class="bg-[#90ee90] text-[#333333] px-4 py-2 rounded-theme w-full text-sm border border-[#7cfc00]">Lisab ostukorvi</button>
+        </div>
+      </div>
+      <!-- Item 2 -->
+      <div data-control-id="407" class="bg-surface rounded-theme-lg border border-border p-4 flex flex-col items-center text-center">
+        <div data-control-id="421" class="w-full h-32 bg-gray-100 rounded-theme mb-4"></div>
+        <h3 data-control-id="408" class="font-semibold text-[#333333]">Vitamiin Nimi 2</h3>
+        <p data-control-id="409" class="text-xs text-[#666666] my-1">Lühikirjeldus</p>
+        <span data-control-id="410" class="text-lg font-bold text-[#E6007A] mb-4">22.50 €</span>
+        <div class="w-full space-y-2">
+          <button data-control-id="411" @click="page = 'product_detail'" class="bg-[#e6007a] text-white px-4 py-2 rounded-theme w-full text-sm">Vaata lähemalt</button>
+          <button data-control-id="412" class="bg-[#90ee90] text-[#333333] px-4 py-2 rounded-theme w-full text-sm border border-[#7cfc00]">Lisab ostukorvi</button>
+        </div>
+      </div>
+      <!-- Item 3 -->
+      <div data-control-id="413" class="bg-surface rounded-theme-lg border border-border p-4 flex flex-col items-center text-center">
+        <div data-control-id="422" class="w-full h-32 bg-gray-100 rounded-theme mb-4"></div>
+        <h3 data-control-id="414" class="font-semibold text-[#333333]">Vitamiin Nimi 3</h3>
+        <p data-control-id="415" class="text-xs text-[#666666] my-1">Lühikirjeldus</p>
+        <span data-control-id="416" class="text-lg font-bold text-[#E6007A] mb-4">10.00 €</span>
+        <div class="w-full space-y-2">
+          <button data-control-id="417" @click="page = 'product_detail'" class="bg-[#e6007a] text-white px-4 py-2 rounded-theme w-full text-sm">Vaata lähemalt</button>
+          <button data-control-id="418" class="bg-[#90ee90] text-[#333333] px-4 py-2 rounded-theme w-full text-sm border border-[#7cfc00]">Lisab ostukorvi</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="w-full bg-[#e0ffe0] border-t border-border mt-12">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 py-6">
+      <span data-control-id="419" class="text-[#333333]">© 2023 Nutrionista</span>
+    </div>
+  </footer>
+</div>
+
+<!-- Page: Blog -->
+<div x-show="page === 'blog'" x-cloak>
+  <header class="w-full bg-[#e0ffe0] border-b border-border">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 py-4 flex items-center justify-between">
+      <span data-control-id="426" class="text-xl font-bold text-[#333333] cursor-pointer" @click="page = 'main'">Nutrionista</span>
+      <nav class="flex gap-6">
+        <a data-control-id="427" class="text-[#555555]" @click.prevent="page = 'main'">Avaleht</a>
+        <a data-control-id="428" class="text-[#555555]" @click.prevent="page = 'shop'">Tooted</a>
+        <a data-control-id="429" class="text-[#555555]" @click.prevent="page = 'profile'">Minu konto</a>
+        <a data-control-id="430" class="text-[#555555]" @click.prevent="page = 'cart'">Ostukorv</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 md:px-6 py-12">
+    <h1 data-control-id="431" class="text-3xl font-bold text-[#333333] mb-8">Blogi/Artiklid</h1>
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <!-- Article 1 -->
+      <div data-control-id="432" class="bg-surface rounded-theme-lg border border-border overflow-hidden flex flex-col">
+        <div data-control-id="457" class="w-full h-48 bg-gray-200"></div>
+        <div class="p-6 flex flex-col flex-1">
+          <h3 data-control-id="433" class="text-lg font-bold text-[#333333] mb-3">Artikli pealkiri 1</h3>
+          <p data-control-id="434" class="text-sm text-[#666666] mb-6 flex-1">Lühike kokkuvõte artikli sisust, et anda lugejale kiire ülevaade teemast.</p>
+          <button data-control-id="435" class="bg-[#e6007a] text-white px-4 py-2 rounded-theme self-start text-sm">Loe edasi</button>
+        </div>
+      </div>
+      <!-- Article 2 -->
+      <div data-control-id="436" class="bg-surface rounded-theme-lg border border-border overflow-hidden flex flex-col">
+        <div data-control-id="458" class="w-full h-48 bg-gray-200"></div>
+        <div class="p-6 flex flex-col flex-1">
+          <h3 data-control-id="437" class="text-lg font-bold text-[#333333] mb-3">Artikli pealkiri 2</h3>
+          <p data-control-id="438" class="text-sm text-[#666666] mb-6 flex-1">Lühike kokkuvõte artikli sisust, et anda lugejale kiire ülevaade teemast.</p>
+          <button data-control-id="439" class="bg-[#e6007a] text-white px-4 py-2 rounded-theme self-start text-sm">Loe edasi</button>
+        </div>
+      </div>
+      <!-- Article 3 -->
+      <div data-control-id="440" class="bg-surface rounded-theme-lg border border-border overflow-hidden flex flex-col">
+        <div data-control-id="459" class="w-full h-48 bg-gray-200"></div>
+        <div class="p-6 flex flex-col flex-1">
+          <h3 data-control-id="441" class="text-lg font-bold text-[#333333] mb-3">Artikli pealkiri 3</h3>
+          <p data-control-id="442" class="text-sm text-[#666666] mb-6 flex-1">Lühike kokkuvõte artikli sisust, et anda lugejale kiire ülevaade teemast.</p>
+          <button data-control-id="443" class="bg-[#e6007a] text-white px-4 py-2 rounded-theme self-start text-sm">Loe edasi</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="w-full bg-[#e0ffe0] border-t border-border mt-12">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 py-6">
+      <span data-control-id="456" class="text-[#333333]">© 2023 Nutrionista</span>
+    </div>
+  </footer>
+</div>
+
+<!-- Page: Contact -->
+<div x-show="page === 'contact'" x-cloak>
+  <header class="w-full bg-[#e0ffe0] border-b border-border">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 py-4 flex items-center justify-between">
+      <span data-control-id="466" class="text-xl font-bold text-[#333333] cursor-pointer" @click="page = 'main'">Nutrionista</span>
+      <nav class="flex gap-6">
+        <a data-control-id="467" class="text-[#555555]" @click.prevent="page = 'main'">Avaleht</a>
+        <a data-control-id="468" class="text-[#555555]" @click.prevent="page = 'shop'">Tooted</a>
+        <a data-control-id="469" class="text-[#555555]" @click.prevent="page = 'profile'">Minu konto</a>
+        <a data-control-id="470" class="text-[#555555]" @click.prevent="page = 'cart'">Ostukorv</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 md:px-6 py-12">
+    <h1 data-control-id="471" class="text-3xl font-bold text-[#333333] mb-8">Tagasiside & Kontakt</h1>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+      <!-- Feedback Form -->
+      <div data-control-id="472" class="bg-surface rounded-theme-lg p-8 shadow-theme border border-border">
+        <h2 data-control-id="473" class="text-xl font-bold text-[#333333] mb-6">Saada meile tagasisidet</h2>
+        <form class="space-y-4">
+          <div>
+            <label data-control-id="474" class="block text-sm font-bold text-[#555555] mb-1">Nimi:</label>
+            <input data-control-id="475" type="text" x-model="formData['475']" placeholder="Sisesta oma nimi" class="border border-border rounded-theme px-4 py-2.5 w-full">
+          </div>
+          <div>
+            <label data-control-id="476" class="block text-sm font-bold text-[#555555] mb-1">E-post:</label>
+            <input data-control-id="477" type="email" x-model="formData['477']" placeholder="Sisesta oma e-post" class="border border-border rounded-theme px-4 py-2.5 w-full">
+          </div>
+          <div>
+            <label data-control-id="478" class="block text-sm font-bold text-[#555555] mb-1">Sõnum:</label>
+            <textarea data-control-id="493" x-model="formData['493']" placeholder="Sisesta oma tagasiside siia..." class="border border-border rounded-theme px-4 py-2.5 w-full h-32"></textarea>
+          </div>
+          <button data-control-id="479" type="button" class="bg-[#e6007a] text-white px-6 py-3 rounded-theme shadow-theme hover:opacity-90 w-full font-bold">Saada tagasiside</button>
+        </form>
+      </div>
+
+      <!-- Contact Info -->
+      <div data-control-id="480" class="bg-surface rounded-theme-lg p-8 shadow-theme border border-border space-y-8">
+        <h2 data-control-id="481" class="text-xl font-bold text-[#333333]">Võta meiega ühendust</h2>
+        <div class="space-y-4">
+          <div class="flex items-center gap-3">
+            <span data-control-id="483" class="material-symbols-outlined text-[#e6007a]">mail</span>
+            <p data-control-id="482" class="text-[#555555]"><span class="font-bold">E-post:</span> info@nutrionista.ee</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <span data-control-id="485" class="material-symbols-outlined text-[#e6007a]">phone_in_talk</span>
+            <p data-control-id="484" class="text-[#555555]"><span class="font-bold">Telefon:</span> +372 123 4567</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <span data-control-id="487" class="material-symbols-outlined text-[#e6007a]">location_on</span>
+            <p data-control-id="486" class="text-[#555555]"><span class="font-bold">Aadress:</span> Näidis tänav 1, Tallinn, Eesti</p>
+          </div>
+        </div>
+
+        <div class="pt-8 border-t border-border">
+          <h2 data-control-id="488" class="text-xl font-bold text-[#333333] mb-4">Live Chat (tulevikus)</h2>
+          <div data-control-id="489" class="bg-[#f0f0f0] rounded-theme p-6 flex flex-col items-center text-center gap-3">
+            <span data-control-id="490" class="material-symbols-outlined text-4xl text-[#90ee90]">chat</span>
+            <p data-control-id="491" class="text-sm text-[#666666]">Live chat funktsionaalsus on arendamisel ja lisatakse peagi!</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="w-full bg-[#e0ffe0] border-t border-border mt-12">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 py-6">
+      <span data-control-id="492" class="text-[#333333]">© 2023 Nutrionista</span>
+    </div>
+  </footer>
+</div>
+
+<!-- Page: FAQ (KKK) -->
+<div x-show="page === 'faq'" x-cloak>
+  <header class="w-full bg-[#e0ffe0] border-b border-border">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 py-4 flex items-center justify-between">
+      <span data-control-id="497" class="text-xl font-bold text-[#333333] cursor-pointer" @click="page = 'main'">Nutrionista</span>
+      <nav class="flex gap-6">
+        <a data-control-id="498" class="text-[#555555]" @click.prevent="page = 'main'">Avaleht</a>
+        <a data-control-id="499" class="text-[#555555]" @click.prevent="page = 'shop'">Tooted</a>
+        <a data-control-id="500" class="text-[#555555]" @click.prevent="page = 'profile'">Minu konto</a>
+        <a data-control-id="501" class="text-[#555555]" @click.prevent="page = 'cart'">Ostukorv</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 md:px-6 py-12">
+    <h1 data-control-id="502" class="text-3xl font-bold text-[#333333] mb-12 text-center">Korduma Kippuvad Küsimused</h1>
+    
+    <div class="space-y-8">
+      <!-- Section 1 -->
+      <div data-control-id="503" class="bg-surface rounded-theme-lg p-8 shadow-theme border border-border">
+        <h2 data-control-id="504" class="text-xl font-bold text-[#E6007A] mb-6">Vitamiinide kohta</h2>
+        <div class="space-y-6">
+          <div>
+            <p data-control-id="505" class="font-bold text-[#333333] mb-2">K: Mis on vitamiinid ja miks need on olulised?</p>
+            <p data-control-id="506" class="text-[#555555]">V: Vitamiinid on orgaanilised ühendid, mida organism vajab normaalseks kasvuks ja toimimiseks. Need on olulised ainevahetuses, immuunsüsteemi toetamisel ja rakkude kaitsmisel.</p>
+          </div>
+          <div>
+            <p data-control-id="507" class="font-bold text-[#333333] mb-2">K: Kuidas valida õigeid vitamiine?</p>
+            <p data-control-id="508" class="text-[#555555]">V: Õigete vitamiinide valik sõltub teie individuaalsetest vajadustest, toitumisest ja elustiilist. Soovitame konsulteerida arsti või toitumisnõustajaga.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2 -->
+      <div data-control-id="509" class="bg-surface rounded-theme-lg p-8 shadow-theme border border-border">
+        <h2 data-control-id="510" class="text-xl font-bold text-[#E6007A] mb-6">Annuste kohta</h2>
+        <div class="space-y-6">
+          <div>
+            <p data-control-id="511" class="font-bold text-[#333333] mb-2">K: Millised on soovitatavad vitamiiniannused?</p>
+            <p data-control-id="512" class="text-[#555555]">V: Soovitatavad annused varieeruvad sõltuvalt vitamiinist, vanusest, soost ja tervislikust seisundist. Järgige alati toote etiketil olevaid juhiseid või konsulteerige spetsialistiga.</p>
+          </div>
+          <div>
+            <p data-control-id="513" class="font-bold text-[#333333] mb-2">K: Kas vitamiine on võimalik üle doseerida?</p>
+            <p data-control-id="514" class="text-[#555555]">V: Jah, teatud vitamiinide (eriti rasvlahustuvate) liigne tarbimine võib olla kahjulik. Olge ettevaatlik ja ärge ületage soovitatud annuseid.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3 -->
+      <div data-control-id="515" class="bg-surface rounded-theme-lg p-8 shadow-theme border border-border">
+        <h2 data-control-id="516" class="text-xl font-bold text-[#E6007A] mb-6">Raseduse ja imetamise ajal</h2>
+        <div class="space-y-6">
+          <div>
+            <p data-control-id="517" class="font-bold text-[#333333] mb-2">K: Milliseid vitamiine on raseduse ajal vaja?</p>
+            <p data-control-id="518" class="text-[#555555]">V: Raseduse ajal on eriti olulised foolhape, raud, kaltsium ja D-vitamiin. Enne vitamiinide võtmist konsulteerige kindlasti oma arstiga.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="w-full bg-[#e0ffe0] border-t border-border mt-12">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 py-6">
+      <span data-control-id="527" class="text-[#333333]">© 2023 Nutrionista</span>
+    </div>
+  </footer>
+</div>
+
+</body>
+</html>
