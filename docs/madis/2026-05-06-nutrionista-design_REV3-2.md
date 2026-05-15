@@ -1,8 +1,8 @@
 # Nutrionista — Design Spec
 
-**Date:** 2026-05-06 (initial), 2026-05-08 (rev. 2 — pivoted to e-commerce), 2026-05-14 (rev. 3 — schema aligned to DB model XML, authentication removed, project renamed), 2026-05-14 (rev. 3.1 — minimal login restored as a UI-only role hint; backend still has no security enforcement)
+**Date:** 2026-05-06 (initial), 2026-05-08 (rev. 2 — pivoted to e-commerce), 2026-05-14 (rev. 3 — schema aligned to DB model XML, authentication removed, project renamed), 2026-05-14 (rev. 3.1 — minimal login restored as a UI-only role hint; backend still has no security enforcement), 2026-05-15 (rev. 4 — tables singularized, `role` lookup table added, build tool switched to Gradle, backend bumped to Spring Boot 4, MapStruct + p6spy added, manual init-scripts replace Flyway as the current local-DB workflow, repository moved to `github.com/madmadis/nutrionista`)
 **Type:** School project, team of 3, 2-week MVP
-**Status:** Rev. 3.1. Schema is the canonical reference defined in `docs/nutrionista_2026-05-14_09_09.xml`. **Commerce tables (`orders`, `order_items`) are not yet modelled and will be added in the first post-revision task.** A single `POST /api/login` endpoint exists for UI role-gating; the backend has no security filter and `/api/admin/**` remains openly accessible.
+**Status:** Rev. 4. Schema canonical reference is `docs/database/2_create.sql` (Redgate model file `docs/madis/nutrionista_2026-05-14_09_09.xml` is the source-of-truth for the diagram but lags behind the SQL after the singularization pass — diagram needs a re-export). **Commerce tables (`orders`, `order_items`) are not yet modelled and remain the first post-revision task.** Backend exists as a Spring Boot skeleton only (`NutrionistaApplication` plus configuration); no controllers, entities, repositories, or auth endpoints are implemented yet — §6 still describes the intended minimal login but neither side is wired up (see memory note `project-auth-misalignment`).
 
 ---
 
@@ -36,12 +36,13 @@ The project is built by a 3-person student team. The primary success criteria ar
 
 ## 3. Stack
 
-| Layer    | Technology                            | Hosting           |
-| -------- | ------------------------------------- | ----------------- |
-| Frontend | Vue 3 SPA + Tailwind CSS + Axios + Pinia (cart store) + Vue Router | Vercel (free)     |
-| Backend  | Java 21 + Spring Boot 3 + Spring Data JPA + Springdoc OpenAPI + Lombok | Render (free)     |
-| Database | PostgreSQL                            | Render (free)     |
-| Migrations | Flyway (built into Spring Boot)     | Runs on app start |
+| Layer        | Technology                            | Hosting           |
+| ------------ | ------------------------------------- | ----------------- |
+| Frontend     | Vue 3 SPA (Options API) + Tailwind CSS + Axios + Pinia (cart + auth) + Vue Router | Vercel (free)     |
+| Backend      | Java 21 + Spring Boot 4.0.6 + Spring Data JPA + Bean Validation + Springdoc OpenAPI 3.0.3 + Lombok + MapStruct 1.6.3 + p6spy 3.9.1 | Render (free)     |
+| Build tool   | Gradle (wrapper checked in: `./gradlew bootRun`, `./gradlew build`) | n/a               |
+| Database     | PostgreSQL                            | Render (free)     |
+| DB workflow  | Manual init scripts in `docs/database/` (`1_reset_database.sql` → `2_create.sql` → `3_import.sql`). Flyway is **not yet adopted** — see §10. | Run manually on each laptop |
 
 **No authentication library.** `jBCrypt` and Spring Security are deliberately omitted — see §6.
 
@@ -70,9 +71,9 @@ The project is built by a 3-person student team. The primary success criteria ar
                   ▼
    ┌──────────────────────────────┐
    │  PostgreSQL on Render        │
-   │  - 8 tables (per XML model)  │
+   │  - 9 tables (singularized)   │
    │  - + orders/order_items TBD  │
-   │  - Seeded via Flyway         │
+   │  - Seeded via init scripts   │
    └──────────────────────────────┘
 ```
 
@@ -85,137 +86,147 @@ The project is built by a 3-person student team. The primary success criteria ar
 - **Admin write:** Admin pages (`/admin/*` in the SPA, `/api/admin/**` in the API) are openly accessible — there is no login. Anyone who knows the URL can edit catalog data. This is an explicit MVP trade-off (see §6) and must be addressed before any real deployment beyond the demo.
 - **Cold-start mitigation:** A free cron-job.org job pings `/actuator/health` every 14 minutes, keeping the Render free-tier backend warm.
 
-## 5. Database Schema (8 tables, per DB model XML)
+## 5. Database Schema (9 tables, singularized in Rev. 4)
 
-The schema is the one defined in `docs/nutrionista_2026-05-14_09_09.xml`. Compared to the original 12-table educational spec, the team generalized the four lookup tables (functions, absorption methods, absorption factors, deficiency symptoms) into a single `properties` table with a `type` discriminator, and their per-domain junctions into the single `nutrient_properties` table. `interaction_types` was replaced by `color_codes` so the UI color is part of the lookup itself. Images move from a URL string on `nutrients` into a dedicated `nutrient_image` table that stores binary data.
+The canonical SQL lives in `docs/database/2_create.sql`. The original Redgate model file (`docs/madis/nutrionista_2026-05-14_09_09.xml`) is the diagram source but is behind after Rev. 4 — re-export when convenient. Compared to the original 12-table educational spec, the team generalized the four lookup tables (functions, absorption methods, absorption factors, deficiency symptoms) into a single `property` table with a `type` discriminator, and their per-domain junctions into the single `nutrient_property` table. `interaction_types` was replaced by `color_code` so the UI color is part of the lookup itself. Images live in a dedicated `nutrient_image` table that stores binary data and is owned by `nutrient.image_id`.
 
-Highlights:
+**Rev. 4 changes vs. Rev. 3:**
 
-- **Generalized lookups.** `properties` holds rows of every educational property (function / absorption method / absorption factor / deficiency symptom). The `type` column (`varchar(3)`) discriminates which kind of property each row is — e.g. `FN`, `AM`, `AF`, `DS`. The team will fix the exact codes in the seed migration.
-- **Generalized junction.** `nutrient_properties` (id, nutrients_id, properties_id, effect_type) links nutrients to any property. `effect_type` is always set (NOT NULL); rows for absorption-factor properties carry `ENHANCE` or `INHIBIT`, all other rows carry `NEUTRAL`.
-- **Color-coded interactions.** `color_codes` is the interaction-quality lookup — each row has a label (`GOOD`, `NEUTRAL`, `BAD`) plus the hex/CSS color the UI should render for that label. `nutrient_interactions` references `color_codes` directly through `interaction_type_id`. The three labels match the mockup's `Hea` / `Neutraalne` / `Halb` user-facing wording; the previous four-category set (ENHANCES/SYNERGISTIC/REQUIRES/INHIBITS) was simplified to fit what the product page actually shows.
-- **Binary images.** `nutrient_image.image_data` is `bytea`. `nutrients.image_id` is a non-nullable foreign key, so every nutrient must have an image row — a placeholder image must be seeded for nutrients without artwork.
-- **`users` exists, but is unused in the MVP.** §6 explains: no login is implemented. The table is kept so future revisions can add auth without a schema change.
+- All table names are **singular** (`category`, `nutrient`, `property`, `nutrient_property`, `nutrient_image`, `nutrient_interaction`, `color_code`, `role`, `"user"`). REST collection URIs stay plural by convention (see §7).
+- New `role` lookup table; `"user".role_id INT NOT NULL REFERENCES role(id)` replaces the previous `users.role` CHECK-constrained string.
+- `"user"` is quoted because `user` is a reserved word in PostgreSQL.
+- `nutrient.image_id` is now **nullable** with `ON DELETE SET NULL` — no placeholder image needs to be seeded.
+- All FK columns renamed to singular form (`nutrient_id`, `property_id`, `role_id`) — previously `nutrients_id`, `properties_id`, `roles_id`.
+- Constraint names made descriptive (`nutrient_category_fk`, `nutrient_price_ck`, etc.) — previously `FK_0`, `CHECK_1`, etc.
+
+**Highlights (unchanged from Rev. 3 unless noted):**
+
+- **Generalized lookups.** `property` holds rows of every educational property (function / absorption method / absorption factor / deficiency symptom). The `type` column (`varchar(3)`) discriminates which kind of property each row is — e.g. `FN`, `AM`, `AF`, `DS`. The team will fix the exact codes in the seed script.
+- **Generalized junction.** `nutrient_property` (id, nutrient_id, property_id, effect_type) links nutrients to any property. `effect_type` is constrained to `ENHANCE` / `INHIBIT` only — the row exists only when there's something to say (so the "NEUTRAL default" idea from Rev. 3 is dropped; absence of a row = neutral).
+- **Color-coded interactions.** `color_code` is the interaction-quality lookup — each row has a label (`GOOD`, `NEUTRAL`, `BAD`) plus the hex/CSS color the UI should render for that label. `nutrient_interaction` references `color_code` directly through `interaction_type_id`. The three labels match the mockup's `Hea` / `Neutraalne` / `Halb` user-facing wording.
+- **Binary images.** `nutrient_image.image_data` is `bytea`. The link is **owned by `nutrient.image_id`** (one image per nutrient, no back-pointer on `nutrient_image`). Option (a) of the Rev. 4 decision: keep things simple, accept the one-image-per-nutrient ceiling. If future work needs multiple images, drop `nutrient.image_id` and add a `nutrient_id` column to `nutrient_image` instead.
+- **`role` + `"user"` exist, but the login flow isn't wired yet.** §6 still describes the intended minimal-login behaviour; neither the backend `AuthController` nor the frontend `authStore` matches that description today (see memory note `project-auth-misalignment`).
 - **`orders` + `order_items` are intentionally not in this revision.** They will be added as a follow-up; the SPA's checkout flow stays a `cart.clear() + alert()` placeholder until then.
 
-### Tables (as defined in the XML)
+### Tables (canonical SQL: `docs/database/2_create.sql`)
 
 ```sql
--- 1. categories
-CREATE TABLE categories (
+-- 1. category
+CREATE TABLE category (
   id          SERIAL PRIMARY KEY,
   name        VARCHAR(100) UNIQUE NOT NULL,
   description TEXT
 );
 
--- 2. nutrients
-CREATE TABLE nutrients (
+-- 2. nutrient_image  (created before `nutrient` because nutrient.image_id references it)
+CREATE TABLE nutrient_image (
+  id         SERIAL PRIMARY KEY,
+  image_data BYTEA NOT NULL
+);
+-- No back-pointer to `nutrient`: link is owned by `nutrient.image_id` (one-image-per-nutrient).
+
+-- 3. nutrient
+CREATE TABLE nutrient (
   id          SERIAL PRIMARY KEY,
   name        VARCHAR(100) UNIQUE NOT NULL,
   description VARCHAR(500),
-  category_id INTEGER NOT NULL REFERENCES categories(id),
+  category_id INTEGER NOT NULL REFERENCES category(id),
   price       NUMERIC(8,2) NOT NULL DEFAULT 0 CHECK (price >= 0),  -- € amount
   in_stock    BOOLEAN NOT NULL DEFAULT true,
   created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  image_id    INTEGER NOT NULL REFERENCES nutrient_image(id)
+  image_id    INTEGER REFERENCES nutrient_image(id) ON DELETE SET NULL
 );
 
--- 3. properties  (generalized lookup for functions / absorption / factors / deficiencies)
-CREATE TABLE properties (
+-- 4. property  (generalized lookup for functions / absorption / factors / deficiencies)
+CREATE TABLE property (
   id          SERIAL PRIMARY KEY,
   type        VARCHAR(3)  NOT NULL,   -- discriminator: FN | AM | AF | DS (exact codes finalised at seed time)
   name        VARCHAR(150) NOT NULL,
   description VARCHAR(150)
 );
 
--- 4. nutrient_properties  (generalized junction)
-CREATE TABLE nutrient_properties (
-  id            SERIAL PRIMARY KEY,
-  nutrients_id  INTEGER NOT NULL REFERENCES nutrients(id),
-  properties_id INTEGER NOT NULL REFERENCES properties(id),
-  effect_type   VARCHAR(10) NOT NULL DEFAULT 'NEUTRAL'
-                 CHECK (effect_type IN ('ENHANCE','INHIBIT','NEUTRAL'))
-);
-
--- 5. color_codes  (interaction-type lookup, includes the UI color)
-CREATE TABLE color_codes (
+-- 5. nutrient_property  (generalized junction)
+CREATE TABLE nutrient_property (
   id          SERIAL PRIMARY KEY,
-  name        VARCHAR(10) UNIQUE NOT NULL,   -- GOOD | NEUTRAL | BAD
-  color_code  VARCHAR(10) NOT NULL           -- e.g. "#22c55e" or a Tailwind token
+  nutrient_id INTEGER NOT NULL REFERENCES nutrient(id) ON DELETE CASCADE,
+  property_id INTEGER NOT NULL REFERENCES property(id),
+  effect_type VARCHAR(10) CHECK (effect_type IN ('ENHANCE','INHIBIT'))
 );
 
--- 6. nutrient_interactions  (directional A → B with an interaction type)
-CREATE TABLE nutrient_interactions (
+-- 6. color_code  (interaction-type lookup, includes the UI color)
+CREATE TABLE color_code (
+  id         SERIAL PRIMARY KEY,
+  name       VARCHAR(10) UNIQUE NOT NULL,   -- GOOD | NEUTRAL | BAD
+  color_code VARCHAR(10) NOT NULL           -- e.g. "#22c55e" or a Tailwind token
+);
+
+-- 7. nutrient_interaction  (directional A → B with an interaction type)
+CREATE TABLE nutrient_interaction (
   id                  SERIAL PRIMARY KEY,
-  nutrient_id         INTEGER NOT NULL REFERENCES nutrients(id) ON DELETE CASCADE,
-  related_nutrient_id INTEGER NOT NULL REFERENCES nutrients(id) ON DELETE CASCADE,
-  interaction_type_id INTEGER NOT NULL REFERENCES color_codes(id),
+  nutrient_id         INTEGER NOT NULL REFERENCES nutrient(id) ON DELETE CASCADE,
+  related_nutrient_id INTEGER NOT NULL REFERENCES nutrient(id) ON DELETE CASCADE,
+  interaction_type_id INTEGER NOT NULL REFERENCES color_code(id),
   description         VARCHAR(200),
   CHECK (nutrient_id <> related_nutrient_id)
 );
 
--- 7. users  (kept for future auth; not used in the MVP — see §6)
-CREATE TABLE users (
+-- 8. role  (Rev. 4 — replaces the old users.role CHECK enum)
+CREATE TABLE role (
+  id   SERIAL PRIMARY KEY,
+  name VARCHAR(10) UNIQUE NOT NULL   -- ADMIN | USER, seeded once
+);
+
+-- 9. "user"  (quoted because `user` is a reserved word in PostgreSQL)
+CREATE TABLE "user" (
   id            SERIAL PRIMARY KEY,
   username      VARCHAR(50) UNIQUE NOT NULL,
   password_hash VARCHAR(60) NOT NULL,
-  role          VARCHAR(10) NOT NULL CHECK (role IN ('ADMIN','USER')),
-  created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  role_id       INTEGER NOT NULL REFERENCES role(id)
 );
-
--- 8. nutrient_image  (binary image data; linked from nutrients.image_id)
-CREATE TABLE nutrient_image (
-  id           SERIAL PRIMARY KEY,
-  image_data   BYTEA   NOT NULL
-);
--- The link between a nutrient and its image is owned by nutrients.image_id.
--- We deliberately do NOT include a back-pointer (nutrients_id) on nutrient_image:
--- it would create a circular FK with nutrients.image_id (chicken-and-egg insert problem)
--- and would also be redundant — every image is reached through nutrients.image_id.
--- One nutrient → one image. If a future revision needs multiple images per nutrient,
--- drop nutrients.image_id and add a back-pointer here instead.
 ```
 
 ### Schema notes
 
-- **Property discrimination.** `properties.type` is a 3-character code, NOT a CHECK-constrained enum in the XML. Pick the codes once (e.g. `FN`, `AM`, `AF`, `DS`) and document them in the seed migration's comment block. Application code must filter by `type` to render the right section of the product detail page.
-- **`nutrient_properties.effect_type`.** Always set (NOT NULL, default `'NEUTRAL'`). For absorption-factor rows (`properties.type='AF'`) the UI presents `ENHANCE` / `INHIBIT` / `NEUTRAL`; for all other property kinds (functions, absorption methods, deficiency symptoms) the row is stored as `'NEUTRAL'` and the UI hides the field. Using `'NEUTRAL'` instead of NULL keeps every row explicit and removes the "is this field actually missing or just N/A?" ambiguity.
-- **`nutrient_interactions` is directional** — `(A, B, BAD)` means "taking A together with B is bad for B". Inserting the inverse pair would make a different (possibly incorrect) claim, so admin UI must label the two dropdowns clearly.
-- **`color_codes` is what the dot panel reads.** The frontend's colored-dot component looks up the color via `interaction_type_id`. Putting the color in the DB row means the UI doesn't need a hard-coded mapping.
-- **`nutrients.image_id` is NOT NULL** and `nutrient_image` has no back-pointer to `nutrients` (see comment in the SQL above). Migration order is therefore: V`<n>`__create_nutrient_image.sql creates the image table first, V`<m>`__create_nutrients.sql adds the `nutrients` table with its FK pointing at the already-existing image table. The seed migration inserts a placeholder image row (id=1) before inserting any nutrients, so the NOT NULL constraint is satisfiable for nutrients without artwork.
-- **`ON DELETE CASCADE`** is set on `nutrient_interactions.nutrient_id` and `nutrient_interactions.related_nutrient_id` only. The other FKs (`nutrient_properties.*`, `nutrients.image_id`, `nutrients.category_id`) are `ON DELETE NONE`, meaning admin deletes will fail until dependents are cleared first. This is conservative and acceptable for the MVP.
-- **No timestamps on lookup or junction tables.** Only `nutrients` and `users` have `created_at` / `updated_at`. The lookup tables (`categories`, `properties`, `color_codes`) and the binary `nutrient_image` table are seeded and rarely edited.
+- **Property discrimination.** `property.type` is a 3-character code, NOT a CHECK-constrained enum. Pick the codes once (e.g. `FN`, `AM`, `AF`, `DS`) and document them in the seed script's comment block. Application code must filter by `type` to render the right section of the product detail page.
+- **`nutrient_property.effect_type`.** Nullable since Rev. 4 — only set for absorption-factor rows (`property.type='AF'`), where the UI presents `ENHANCE` or `INHIBIT`. For other property kinds the column stays `NULL` and the UI hides the field. The Rev. 3 "always-set, default NEUTRAL" rule was dropped because it added a sentinel value that meant the same thing as absence.
+- **`nutrient_interaction` is directional** — `(A, B, BAD)` means "taking A together with B is bad for B". Inserting the inverse pair would make a different (possibly incorrect) claim, so admin UI must label the two dropdowns clearly.
+- **`color_code` is what the dot panel reads.** The frontend's colored-dot component looks up the color via `interaction_type_id`. Putting the color in the DB row means the UI doesn't need a hard-coded mapping.
+- **`nutrient.image_id` is nullable** (Rev. 4 change). A nutrient without artwork stores `NULL`; the frontend falls back to a static placeholder image. The Rev. 3 plan of seeding a placeholder image row to satisfy a `NOT NULL` constraint is no longer needed. `ON DELETE SET NULL` means deleting an image row doesn't cascade-delete its nutrient.
+- **Script ordering.** Because `nutrient.image_id` references `nutrient_image(id)`, `nutrient_image` must be created first. The order in `docs/database/2_create.sql` matches: `category`, `nutrient_image`, then `nutrient`, then the join tables, then `role`, then `"user"`.
+- **`ON DELETE CASCADE`** is set on the two `nutrient_interaction.*` FKs and on `nutrient_property.nutrient_id` (Rev. 4: cascading deletes through the junction is the expected admin behaviour when you delete a nutrient). `nutrient_property.property_id` stays restrictive (deleting a `property` row that still has links should fail loudly). `nutrient.category_id` stays restrictive for the same reason.
+- **No timestamps on lookup or junction tables.** Only `nutrient` and `"user"` have `created_at`. The lookup tables (`category`, `property`, `color_code`, `role`) and the binary `nutrient_image` table are seeded and rarely edited.
 - **Cart is not in the schema** and never will be — cart state lives in the browser (Pinia store + `localStorage`). It only becomes rows in the future `orders` / `order_items` tables at checkout.
 
-#### Explanatory: why a single generalized `properties` table
+#### Explanatory: why a single generalized `property` table
 
-The original spec defined four separate lookup tables (`functions`, `absorption_methods`, `absorption_factors`, `deficiency_symptoms`) plus four matching junctions. The XML collapses them into one `properties` table + one `nutrient_properties` junction. The trade-off:
+The original spec defined four separate lookup tables (`functions`, `absorption_methods`, `absorption_factors`, `deficiency_symptoms`) plus four matching junctions. The schema collapses them into one `property` table + one `nutrient_property` junction. The trade-off:
 
-| Aspect | Separate tables (old spec) | Single `properties` (XML) |
+| Aspect | Separate tables (old spec) | Single `property` (current) |
 |---|---|---|
-| Migrations | 4 lookup migrations + 4 junctions | 1 lookup migration + 1 junction |
+| Schema files | 4 lookup tables + 4 junctions | 1 lookup table + 1 junction |
 | Admin CRUD | 4 admin screens | 1 admin screen with a `type` filter |
-| Query for "all functions of nutrient X" | `JOIN nutrient_functions` | `JOIN nutrient_properties WHERE properties.type='FN'` |
+| Query for "all functions of nutrient X" | `JOIN nutrient_function` | `JOIN nutrient_property WHERE property.type='FN'` |
 | Risk | Lots of near-identical boilerplate | A single misclassified `type` value contaminates the whole catalog |
 
-Both designs work; the XML choice trades a small ongoing query-filter overhead for a much smaller code surface in a 2-week sprint. The team agreed to live with the `type` column's discipline.
+Both designs work; the current choice trades a small ongoing query-filter overhead for a much smaller code surface in a 2-week sprint. The team agreed to live with the `type` column's discipline.
 
 #### Explanatory: directional interactions
 
-`nutrient_interactions` has two columns referencing `nutrients`:
+`nutrient_interaction` has two columns referencing `nutrient`:
 
 - `nutrient_id` — the "actor"
 - `related_nutrient_id` — the recipient
-- `interaction_type_id` — what kind of interaction (FK to `color_codes`)
+- `interaction_type_id` — what kind of interaction (FK to `color_code`)
 
 A row reads like a sentence: **"`nutrient_id` is `interaction_type` with `related_nutrient_id`"**. Example: `(Vitamin C, Iron, GOOD)` = "Vitamin C is GOOD with Iron" (it helps iron absorption); `(Calcium, Iron, BAD)` = "Calcium is BAD with Iron" (it inhibits iron absorption). Swapping the two nutrient columns produces a different (and not necessarily correct) claim, so the admin form must label the dropdowns as **"Nutrient"** and **"Related to"** so the order is entered on purpose. `CHECK (nutrient_id <> related_nutrient_id)` is a backstop preventing rows like "Iron is GOOD with iron".
 
-`color_codes` carries the UI color directly (`color_code` column), so the dot panel renders by looking up `interaction_type_id → color_codes.color_code`. No hard-coded mapping in the frontend.
+`color_code` carries the UI color directly (`color_code` column), so the dot panel renders by looking up `interaction_type_id → color_code.color_code`. No hard-coded mapping in the frontend.
 
-#### Explanatory: timestamps only on `nutrients` and `users`
+#### Explanatory: timestamps only on `nutrient` and `"user"`
 
-`nutrients` is the table admins edit most often (names, descriptions, prices, in-stock flag), so `created_at` / `updated_at` earn their keep. `users` carries only `created_at` for account-audit purposes; passwords change so rarely that `updated_at` is overhead. Lookup tables (`categories`, `properties`, `color_codes`) are seeded once and don't need audit columns.
+`nutrient` is the table admins edit most often (names, descriptions, prices, in-stock flag), so `created_at` / `updated_at` earn their keep. `"user"` carries only `created_at` for account-audit purposes; passwords change so rarely that `updated_at` is overhead. Lookup tables (`category`, `property`, `color_code`, `role`) are seeded once and don't need audit columns.
 
 ## 6. Authentication
 
@@ -256,6 +267,8 @@ The XML keeps `users`. Rev. 3.1 actively uses it (login lookups). The seed (`V8_
 
 REST endpoints follow standard CRUD conventions. Detailed request/response shapes will be defined in the implementation plan.
 
+**URI convention.** Even though tables are singular (`nutrient`, `category`, `color_code` …), collection URIs stay **plural** in line with common REST practice: `GET /api/nutrients`, `POST /api/categories`, etc. The plural in the URI refers to "the collection of nutrient resources", not the table name.
+
 **All endpoints below are open — there is no security enforcement. `POST /api/login` exists for UI role-gating only (see §6).**
 
 **Auth (UI role-gating only, see §6):**
@@ -274,12 +287,12 @@ GET  /api/categories
 GET  /api/categories/{id}
 GET  /api/nutrients                      ← shop grid; supports ?category={id} filter
 GET  /api/nutrients/{id}                 ← product detail page payload: nutrient + price + in_stock
-                                            + properties (filtered by type: FN/AM/AF/DS) + interactions
+                                            + properties (filtered by property.type: FN/AM/AF/DS) + interactions
 GET  /api/nutrients/search?q={query}
 GET  /api/nutrients/highlights           ← home page "Esiletõstetud Tooted" — the 4 newest in-stock nutrients
                                             (no `featured` column; selection is by `created_at DESC + in_stock = true LIMIT 4`)
 GET  /api/color-codes                    ← interaction-type lookup (id, name, color_code)
-GET  /api/nutrient-image/{id}            ← returns image_data bytes for a nutrient image row
+GET  /api/nutrient-images/{id}           ← returns image_data bytes for a nutrient_image row
 GET  /actuator/health                    ← keep-alive endpoint
 ```
 
@@ -288,8 +301,10 @@ GET  /actuator/health                    ← keep-alive endpoint
 ```
 POST   /api/admin/nutrients
 PUT    /api/admin/nutrients/{id}         ← edit name, description, category, price, in_stock, image
-DELETE /api/admin/nutrients/{id}         ← refuses if dependent rows still reference it (no ON DELETE CASCADE
-                                            on nutrient_properties or nutrient_image — clear them first)
+DELETE /api/admin/nutrients/{id}         ← cascades to `nutrient_property` + `nutrient_interaction` rows
+                                            (those FKs are ON DELETE CASCADE). Linked `nutrient_image` row
+                                            is NOT cascaded — image_id is set to NULL on the deleted side
+                                            but the image row itself stays until manually removed.
 POST   /api/admin/categories
 PUT    /api/admin/categories/{id}
 DELETE /api/admin/categories/{id}
@@ -305,7 +320,7 @@ DELETE /api/admin/nutrient-interactions/{id}
 POST   /api/admin/color-codes            ← rarely edited; seeded once
 PUT    /api/admin/color-codes/{id}
 DELETE /api/admin/color-codes/{id}
-POST   /api/admin/nutrient-image         ← upload a new image (multipart bytea)
+POST   /api/admin/nutrient-images        ← upload a new image (multipart bytea)
 ```
 
 **Orders (TBD — `orders` + `order_items` will be added in the next revision):**
@@ -336,13 +351,9 @@ The cart is **client-side only** (Pinia store + `localStorage`). Adding/removing
 
 The backend uses **springdoc-openapi** to auto-generate interactive API documentation from the Spring Boot controllers.
 
-- Dependency added to `backend/pom.xml`:
-  ```xml
-  <dependency>
-      <groupId>org.springdoc</groupId>
-      <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-      <version>2.3.0</version>
-  </dependency>
+- Dependency added to `backend/build.gradle`:
+  ```groovy
+  implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3'
   ```
 - OpenAPI 3 spec available at: `http://localhost:8080/v3/api-docs` (JSON).
 - Swagger UI available at: `http://localhost:8080/swagger-ui.html` (interactive HTML).
@@ -448,48 +459,51 @@ Cart never touches the backend until `POST /api/orders` is called (future).
 
 ## 9. Repository Structure
 
-**GitHub repository:** [`github.com/luhtmakaili/nutrionista-full`](https://github.com/luhtmakaili/nutrionista-full). Single monorepo with two top-level project folders.
+**GitHub repository:** [`github.com/madmadis/nutrionista`](https://github.com/madmadis/nutrionista). Single monorepo with two top-level project folders.
 
-### Target layout (the spec describes the *desired* layout — see "Migration note" below)
+### Actual layout (Rev. 4)
 
 ```
-nutrionista-full/
+nutrionista/
 ├── backend/
-│   ├── pom.xml
-│   ├── src/main/java/com/nutrionista/
-│   │   ├── NutrionistaApplication.java
-│   │   ├── controller/
-│   │   ├── entity/
-│   │   ├── repository/
-│   │   └── service/
-│   └── src/main/resources/
-│       ├── application.properties
-│       └── db/migration/
-│           ├── V1__create_categories.sql
-│           ├── V2__create_nutrients.sql
-│           ├── … (one V<n> file per table + relationships)
-│           └── V100__seed_data.sql
+│   ├── build.gradle
+│   ├── settings.gradle
+│   ├── gradlew, gradlew.bat, gradle/wrapper/
+│   └── src/main/
+│       ├── java/ee/nutrionista/
+│       │   └── NutrionistaApplication.java   ← only file so far; controllers/entities/etc. TBD
+│       └── resources/
+│           ├── application.properties
+│           └── spy.properties                ← p6spy SQL logging config
 ├── frontend/
 │   ├── package.json
 │   ├── vite.config.js
+│   ├── tailwind.config.js, postcss.config.js
 │   └── src/
 │       ├── api.js
-│       ├── components/
-│       ├── router/
-│       ├── stores/
-│       └── views/
+│       ├── main.js, App.vue
+│       ├── components/   (NavBar, FooterBar)
+│       ├── router/index.js
+│       ├── stores/       (auth.js, cart.js)
+│       ├── views/        (HomeView, ShopView, ProductDetailView, … see §8)
+│       └── assets/main.css
 └── docs/
-    ├── 2026-05-06-nutrionista-design_REV3-2.md  ← this file
-    ├── nutrionista-mockup.html             ← Balsamiq mockup
-    └── nutrionista_2026-05-14_09_09.xml      ← canonical DB model
+    ├── database/
+    │   ├── 1_reset_database.sql
+    │   ├── 2_create.sql                      ← canonical schema (Rev. 4 singular tables)
+    │   └── 3_import.sql                      ← seed data (currently empty)
+    ├── madis/
+    │   ├── 2026-05-06-nutrionista-design_REV3-2.md   ← this file (despite the name, content is Rev. 4)
+    │   ├── nutrionista-mockup.html                   ← Balsamiq HTML export
+    │   ├── Nutrionista balsamiq.pdf                  ← Balsamiq source export
+    │   └── nutrionista_2026-05-14_09_09.xml          ← Redgate DB model (lags Rev. 4)
+    └── vue-komponendi-struktuur.md                   ← Vue component conventions (Estonian)
 ```
 
-- **Java base package:** `com.nutrionista`
-- **Maven artifact:** `groupId=com.nutrionista`, `artifactId=nutrionista-backend`
-
-### Migration note (current code does NOT match this layout)
-
-As of Rev. 3.1, the backend code lives at `backend/category/src/demo/src/main/java/com/example/demo/` with `groupId=com.example`, `artifactId=demo`. That nesting and naming is an accident of how Spring Initializr was run; it does not reflect the intended structure. **Relocating the backend to the target layout above is on the team's punch list** — done by whoever picks up the catalog cleanup. Until that move, every backend path in the rest of this spec should be read as the target — not the current state.
+- **Java base package:** `ee.nutrionista`
+- **Gradle settings:** `rootProject.name = 'backend'`, `group = 'ee'`, `version = '0.0.1-SNAPSHOT'`
+- **Run locally:** `./gradlew bootRun` (or the IDE Run button on `NutrionistaApplication`)
+- **Build a fat jar:** `./gradlew build` → `backend/build/libs/backend-0.0.1-SNAPSHOT.jar`
 
 ### Branching strategy
 
@@ -507,31 +521,47 @@ main (default, deployable)
 
 PR title format: `[area] description` — e.g. `[backend] orders endpoint`, `[frontend] interaction-dots component`.
 
-## 10. Database Migrations (Flyway)
+## 10. Database Schema & Seeding
 
-- Schema files live in `backend/src/main/resources/db/migration/`.
-- Flyway runs automatically on Spring Boot startup, applying any new versioned migrations in order.
-- Once a migration is committed and merged, it is **never edited** — changes are made via new migration files (e.g., `V13__add_color_to_categories.sql`).
-- The team's `sample_data.sql` is shipped as `V100__seed_data.sql`, so a fresh database boots up fully seeded.
+### Current workflow (Rev. 4): manual init scripts
 
-### Local development setup
+The current setup is **deliberately simple** — three SQL scripts in `docs/database/` that each teammate runs by hand against their local PostgreSQL when the schema changes:
 
-**Each teammate runs PostgreSQL locally — there is no H2 profile.** Dev and prod use the same database engine so Flyway migrations, `bytea` image storage, and PostgreSQL-specific SQL behave identically in both environments.
+```
+docs/database/
+├── 1_reset_database.sql   ← DROP SCHEMA nutrionista CASCADE; CREATE SCHEMA nutrionista; grants
+├── 2_create.sql           ← all 9 tables + FKs + CHECKs (canonical schema)
+└── 3_import.sql           ← seed data — currently empty, to be filled in
+```
 
-- Install PostgreSQL on your laptop (any 14+ version).
-- Create a local database (e.g., `nutrionista_dev`) and a user with full rights on it.
-- Point `backend/src/main/resources/application.properties` at it via `spring.datasource.url` / `username` / `password`.
-- On first `./mvnw spring-boot:run`, Flyway will create all tables and seed data automatically.
+To (re)build a local database:
 
-The codebase currently carries a redundant `application-postgres.properties` and a commented-out H2 block in `application.properties` — both are slated for removal in the §12 foundation cleanup. There is one canonical `application.properties`.
+```bash
+psql -U postgres -f docs/database/1_reset_database.sql
+psql -U postgres -f docs/database/2_create.sql
+psql -U postgres -f docs/database/3_import.sql
+./gradlew bootRun
+```
 
-### Explanatory: what is Flyway and why we use it
+`backend/src/main/resources/application.properties` is set to:
+
+- `spring.jpa.hibernate.ddl-auto=none` — Hibernate never touches the schema.
+- `spring.sql.init.mode=always` — Spring Boot's built-in init reads `schema.sql` / `data.sql` from the classpath if present (we don't currently ship either, so this is a no-op safety net).
+- `spring.datasource.url=jdbc:p6spy:postgresql://localhost/postgres` — JDBC traffic goes through **p6spy** so logged SQL has parameter values inlined (handy for debugging). The "normal" Postgres driver line is kept commented underneath in case you want to bypass p6spy.
+
+**Each teammate runs PostgreSQL locally — there is no H2 profile.** Dev and prod use the same database engine so `bytea` image storage and PostgreSQL-specific SQL behave identically in both environments.
+
+### Planned: switch to Flyway
+
+The manual-script workflow works, but only because the schema is small and the team is three people in close communication. As the schema grows and people work in parallel branches, the standard answer is **Flyway** — versioned, append-only migration files run automatically on app startup. The rest of this section explains what that would look like; it's the direction we'll move once the catalog code is in place and schema churn slows down.
+
+### Explanatory: what is Flyway and why we'll move to it
 
 #### The problem migrations solve
 
 The 3 of us each have our own PostgreSQL running on our own laptop. We all need:
 
-- The same 8 tables (+ `orders` / `order_items` once they're added)
+- The same 9 tables (+ `orders` / `order_items` once they're added)
 - The same columns and constraints
 - The same seed data
 
@@ -543,15 +573,15 @@ Without a tool to manage this, schema changes happen like:
 4. A week later, Madis adds a column to that table. Sends new SQL. Some apply it, some don't, some apply it twice and get errors, someone has a typo.
 5. All three databases drift apart. Code that runs on Madis's machine breaks on Rain's. Hours are wasted figuring out why.
 
-This is called **schema drift**, and it is the most common source of "but it works on my machine" bugs in team projects.
+This is called **schema drift**, and it is the most common source of "but it works on my machine" bugs in team projects. Today we work around it by all running the same three SQL files; once changes get less coordinated, we'll switch to Flyway.
 
 #### What a migration is
 
 A **migration** is just a single SQL file in the repo that represents one step of database change. Example:
 
 ```sql
--- V1__create_categories.sql
-CREATE TABLE categories (
+-- V1__create_category.sql
+CREATE TABLE category (
   id SERIAL PRIMARY KEY,
   name VARCHAR(100) UNIQUE NOT NULL,
   description TEXT
@@ -576,40 +606,20 @@ Flyway is a small tool that runs automatically when the Spring Boot app starts. 
 The format is **`V` + number + `__` (two underscores) + descriptive name + `.sql`**:
 
 ```
-V1__create_categories.sql       ← runs first
-V2__create_nutrient_image.sql   ← must run before nutrients (nutrients.image_id references it)
-V3__create_nutrients.sql
-V4__create_properties.sql
-V5__create_nutrient_properties.sql
-V6__create_color_codes.sql
-V7__create_nutrient_interactions.sql
-V8__create_users.sql
-... (further V<n> files for orders / order_items once Madis adds them)
-V100__seed_data.sql             ← runs after all schema is in place
+V1__create_category.sql        ← runs first
+V2__create_nutrient_image.sql  ← must run before nutrient (nutrient.image_id references it)
+V3__create_nutrient.sql
+V4__create_property.sql
+V5__create_nutrient_property.sql
+V6__create_color_code.sql
+V7__create_nutrient_interaction.sql
+V8__create_role.sql
+V9__create_user.sql
+... (further V<n> files for orders / order_items once they're added)
+V100__seed_data.sql            ← runs after all schema is in place
 ```
 
 The number determines run order. The name after `__` is for humans. We use `V100` for the seed data so it's well after the schema files; the exact number doesn't matter as long as it's higher than the last schema migration.
-
-#### Daily workflow
-
-**Day 1, Madis:**
-
-- Adds `V1__create_categories.sql` to `db/migration/`.
-- Commits, pushes, opens a PR.
-- A teammate reviews and merges into `main`.
-
-**Day 1, Kaili (later):**
-
-- `git pull` — picks up the new migration file.
-- Starts the Spring Boot app (via `./mvnw spring-boot:run` or the IDE's Run button).
-- Flyway sees that `V1` has not been applied to Kaili's database, runs it automatically, creates the `categories` table.
-- Kaili's database now matches Madis's. No Discord copy-paste, no manual SQL.
-
-**Day 5, someone needs to add a column:**
-
-- They write a new file: `V13__add_color_to_categories.sql` containing `ALTER TABLE categories ADD COLUMN color VARCHAR(20);`.
-- Commit, push, merge.
-- Everyone else `git pull`s and restarts the app — Flyway applies V13 to their local database automatically.
 
 #### The "never edit a committed migration" rule
 
@@ -617,7 +627,7 @@ Once a migration file has been merged into `main`, it must **never be modified**
 
 The reason: Flyway records a checksum of every applied migration. If a teammate has already applied `V1` and someone else later edits `V1`, Flyway will refuse to start the app — it sees that the file no longer matches what was originally applied.
 
-The correct way to make a change is therefore always: **add a new `V<n>__...` file** (e.g., `V14__rename_categories_column.sql`).
+The correct way to make a change is therefore always: **add a new `V<n>__...` file** (e.g., `V14__rename_category_column.sql`).
 
 #### Recovery if a database gets corrupted
 
@@ -655,43 +665,47 @@ Set these once at project creation; afterwards `git push` to `main` auto-deploys
 
 ## 12. Team Task Split
 
-The team is three students — **Rain**, **Kaili**, and **Madis** — collaborating via `github.com/luhtmakaili/nutrionista-full`. **There are no pre-assigned task owners.** Whoever has time picks up the next item on the punch list; everyone is expected to work across the stack as needed. Standups (in whatever form the team uses) decide who takes what.
+The team is three students — **Rain**, **Kaili**, and **Madis** — collaborating via [`github.com/madmadis/nutrionista`](https://github.com/madmadis/nutrionista). **There are no pre-assigned task owners.** Whoever has time picks up the next item on the punch list; everyone is expected to work across the stack as needed. Standups (in whatever form the team uses) decide who takes what.
 
 ### Work to do (no specific owner — pick what's free)
 
 The remaining work, grouped by area:
 
 **Foundation cleanup**
-- Relocate the backend out of `backend/category/src/demo/` into the target layout in §9.
-- Rename the Java package `com.example.demo` → `com.nutrionista`.
-- **DONE** (commits `7530110`, `a93ed1b`) — Trim the backend auth code to the minimal login: deleted `AuthFilter`, `Session`, `SessionRepository`, `V6__create_sessions.sql`. Rewrote `AuthController` + `AuthService` to a single `POST /api/login` returning `{username, role}`. Dropped `LoginResponse.token`. **Kept** `jbcrypt` in `pom.xml` — it verifies the seeded BCrypt hashes.
-- **DONE** (commit `7530110`) — Deleted the cut-feature backend code: `BlogPost*`, `FaqItem*` entities/repos/controllers + the V3/V4 migrations.
-- Delete the cut features' frontend: `BlogView`, `AdminBlogView`, `AdminFaqView`, `QuizView`, `WishlistView`, `OrderHistoryView`, `ContactView`, plus their router entries. `FaqView` stays as a static page (content typed in code, no DB).
+- **DONE (Rev. 4)** — Backend is in the target layout: `backend/src/main/java/ee/nutrionista/`. The earlier `backend/category/src/demo/` nesting is gone.
+- **DONE (Rev. 4)** — Java base package is `ee.nutrionista` (note: the spec previously planned `com.nutrionista`; the team went with `ee.` to match the project's national/edu context). Gradle: `group=ee`, `rootProject.name=backend`.
+- **DONE (Rev. 4)** — Switched build tool from Maven (Spring Initializr default) to Gradle with the wrapper checked in.
+- **DONE** (commits `7530110`, `a93ed1b`) — Trim the backend auth code to the minimal login: deleted `AuthFilter`, `Session`, `SessionRepository`, `V6__create_sessions.sql`. Rewrote `AuthController` + `AuthService` to a single `POST /api/login` returning `{username, role}`. Dropped `LoginResponse.token`. **Kept** `jbcrypt` in `pom.xml` — it verifies the seeded BCrypt hashes. *(Note: the current backend codebase actually contains only `NutrionistaApplication`; revisit this and the frontend auth item together — see memory note `project-auth-misalignment`.)*
+- **N/A** — "Deleted cut-feature backend code: `BlogPost*`, `FaqItem*` entities/repos/controllers". These files never existed in the current backend skeleton; nothing to delete.
+- Delete the cut features' frontend: `BlogView`, `AdminBlogView`, `AdminFaqView`, `QuizView`, `WishlistView`, `OrderHistoryView`, `ContactView`, `ProfileView`, plus their router entries in `frontend/src/router/index.js`. `FaqView` stays as a static page (content typed in code, no DB).
 - Trim the frontend auth code to match the new minimal model: rewire `LoginView` to `POST /api/login`; rewire `stores/auth.js` to hold `{username, role}` from the response (no token); delete the bearer interceptor in `api.js` (no token to send). **Keep** the `meta: { requiresAdmin: true }` route guards — they now check `role === 'ADMIN'` client-side.
 - Clean up: garbage files in `frontend/` (`a.price`, `b.price`, `n.category.id`, `{`), commit a top-level `.gitignore` covering `.idea/` and `node_modules/`, fix `frontend/README.md` reference to `src/services/`.
-- Delete the redundant `backend/src/main/resources/application-postgres.properties` and remove the commented-out H2 block from `application.properties` — there is one canonical Postgres config (see §10 "Local development setup").
+- Resolve `frontend/package.json` duplicates if they ever come back (Rev. 4 cleanup already removed duplicate `@vitejs/plugin-vue` and `vite` entries). Cross-check `vite ^8.0.3` and `eslint ^10.1.0` pins — they're suspiciously high; if `npm install` fails, drop to the latest published versions.
+- Bring the Redgate Data Modeler diagram (`docs/madis/nutrionista_2026-05-14_09_09.xml`) back in sync with `2_create.sql` (singular tables, `role` lookup, nullable `nutrient.image_id`).
 
-**Backend catalog (per XML schema)**
-- Flyway migrations V1–V8 for the 8 XML tables (rewrite the current ones to match the XML column-by-column).
-- Seed migration: at least the `color_codes` rows (`GOOD` = `#22c55e` green, `NEUTRAL` = `#eab308` yellow, `BAD` = `#ef4444` red), the `properties.type` codes (FN/AM/AF/DS), a placeholder `nutrient_image` row so `nutrients.image_id NOT NULL` is satisfiable.
-- Entities + repositories for `Category`, `Nutrient`, `Property`, `NutrientProperty`, `ColorCode`, `NutrientInteraction`, `User`, `NutrientImage`.
-- Public catalog endpoints (see §7): `/api/categories`, `/api/nutrients` (with `?category=`, `/search`, `/highlights`, `/{id}`), `/api/color-codes`, `/api/nutrient-image/{id}`.
-- Admin catalog endpoints (open, see §7): nutrients / categories / properties / nutrient-properties / nutrient-interactions / color-codes / nutrient-image CRUD.
-- Swagger UI verified at `/swagger-ui.html`, CORS updated to include the Vercel domain.
+**Backend catalog (per current schema)**
+- Move `docs/database/{1_reset_database, 2_create, 3_import}.sql` (or their Flyway-versioned equivalents) into a workflow the whole team uses consistently — either commit to manual psql runs or adopt Flyway as described in §10.
+- Seed data in `3_import.sql` (currently empty): at minimum the `role` rows (`ADMIN`, `USER`), the `color_code` rows (`GOOD` = `#22c55e` green, `NEUTRAL` = `#eab308` yellow, `BAD` = `#ef4444` red), the `property.type` codes (FN/AM/AF/DS), and the admin user(s) with bcrypt hashes.
+- Entities + repositories for `Category`, `Nutrient`, `Property`, `NutrientProperty`, `ColorCode`, `NutrientInteraction`, `Role`, `User`, `NutrientImage`. Java type names stay PascalCase + singular (already match table names).
+- DTOs + MapStruct mappers (MapStruct 1.6.3 is already on the classpath; `@Mapper(componentModel="spring")` is the default via `compileJava` options in `build.gradle`).
+- Public catalog endpoints (see §7): `/api/categories`, `/api/nutrients` (with `?category=`, `/search`, `/highlights`, `/{id}`), `/api/color-codes`, `/api/nutrient-images/{id}`.
+- Admin catalog endpoints (open, see §7): nutrients / categories / properties / nutrient-properties / nutrient-interactions / color-codes / nutrient-images CRUD.
+- Swagger UI verified at `/swagger-ui.html` (Springdoc 3.0.3 is on the classpath), CORS updated to include the Vercel domain.
 
 **Commerce (the next revision)**
-- Design `orders` + `order_items` tables (column types, FKs, CHECKs) and write the migrations.
+- Design `orders` + `order_items` tables (column types, FKs, CHECKs) and append them to `2_create.sql` (or as a Flyway migration if §10 has been switched over by then).
 - Entities + repositories + service.
 - `POST /api/orders` (creates order + items in one transaction, snapshots `unit_price`).
 - `GET /api/admin/orders` (list + `?status=` filter) and `PUT /api/admin/orders/{id}/status`.
 - Document the JSON body shape so the frontend checkout form lines up.
 
 **Frontend**
-- Cart store: add the `localStorage` watcher + correct the field shape to `{ nutrientId, name, unitPrice, imageUrl, quantity }`.
+- Cart store: add the `localStorage` watcher + correct the field shape to `{ nutrientId, name, unitPrice, imageUrl, quantity }` (today's `cart.js` uses a generic `{ ...product, qty }` spread).
 - Public pages on live data: Home highlights grid (4 newest in-stock), Shop grid + filters, ProductDetail rendering the educational properties + colored-dot interactions panel.
 - Checkout page wired to `POST /api/orders` (once the endpoint exists), and a `/confirmation/:id` page.
 - Admin pages: Nutrients / Categories / Properties / Nutrient-properties / Interactions / Color codes / Orders.
-- Tailwind tokens: replace inline `bg-[#e6007a]` hex with `bg-primary` etc., or commit to inline hex everywhere — pick one.
+- Tailwind tokens: replace inline `bg-[#e6007a]` hex (currently in `NavBar.vue`, `FooterBar.vue`, etc.) with named tokens in `tailwind.config.js` — or commit to inline hex everywhere; pick one and apply it.
+- Component conventions (Options API only, `event-` event prefix, axios via `this.$axios`, data loading in `beforeMount`) are documented in `frontend/CLAUDE.md` and `docs/vue-komponendi-struktuur.md`.
 
 **Deployment**
 - Render web service for the backend, Render Postgres, Vercel for the frontend.
@@ -712,8 +726,8 @@ Day 14    Demo
 ### Pair points (these always need a quick chat before someone starts)
 
 - **Order DTO shape** (before commerce work begins): whoever takes the backend endpoint and whoever takes the checkout form must agree on the JSON body.
-- **Interaction-dots data** (before the dot panel work begins): the JSON shape returned by `GET /api/nutrients/{id}` for interactions must match what `<InteractionDot>` consumes. `color_codes.color_code` should arrive on the client without a hardcoded mapping.
-- **Property type codes** (before any property seed migration is written): the team picks the values for `properties.type` (suggested: `FN`/`AM`/`AF`/`DS`) and writes them down here once decided.
+- **Interaction-dots data** (before the dot panel work begins): the JSON shape returned by `GET /api/nutrients/{id}` for interactions must match what `<InteractionDot>` consumes. `color_code.color_code` should arrive on the client without a hardcoded mapping.
+- **Property type codes** (before `3_import.sql` is filled in): the team picks the values for `property.type` (suggested: `FN`/`AM`/`AF`/`DS`) and writes them down here once decided.
 
 ### Branch strategy reminder (from §9)
 
@@ -805,8 +819,8 @@ The Balsamiq mockup at `docs/nutrionista-mockup.html` shows substantially more f
 | **Order history page (Tellimuste ajalugu)** | Requires a per-user "my orders" listing — meaningless without login, which is out of scope. |
 | **Reorder reminders** | Requires scheduled job + reminder table + email/notification dispatch — fully separate subsystem. |
 | **Brand filter, Goal filter** in the shop | Requires `brands` + `product_goals` tables and many-to-many joins. Category filter alone is enough for the demo. |
-| **Blog (Blogi/Artiklid)** | Cut entirely from the data model (the existing `blog_posts` table + `BlogPostController` + `/blog` route should be deleted in Rev. 3 cleanup). |
-| **FAQ (KKK)** | Cut from the data model (the existing `faq_items` table + `FaqItemController` + `/faq` route should be deleted in Rev. 3 cleanup). A static FAQ Vue component is acceptable as a Day 12–13 stretch goal. |
+| **Blog (Blogi/Artiklid)** | Cut entirely from the data model. The frontend `/blog` route and `BlogView`/`AdminBlogView` still exist and need to be deleted in the §12 foundation cleanup. |
+| **FAQ (KKK)** | Cut from the data model. The frontend `/admin/faq` route and `AdminFaqView` still exist and need to be deleted in the §12 foundation cleanup. A static `FaqView` (content typed in code, no DB) is acceptable as a Day 12–13 stretch goal. |
 | **Contact / feedback form (Tagasiside & Kontakt)** | Cut. Show a static contact-info page only as a stretch. |
 | **Live chat** | Already labeled "tulevikus" (in the future) in the mockup. Cut. |
 | **Real payments** | The checkout collects shipping info only — no card capture, no payment provider. |
@@ -825,11 +839,11 @@ The Balsamiq mockup at `docs/nutrionista-mockup.html` shows substantially more f
 
 | Item | Status |
 |---|---|
-| `orders` + `order_items` tables, entities, migration | First task after spec freeze (2026-05-14) |
+| `orders` + `order_items` tables, entities, schema scripts | First task after Rev. 4 freeze (2026-05-15) |
 | `POST /api/orders` endpoint | Depends on tables above |
 | Checkout page wired to a real backend | Depends on endpoint above |
 | `/confirmation/:id` page | Depends on endpoint above |
-| Backend relocation out of `backend/category/src/demo/` | Foundation cleanup, Day 1-3 |
+| Backend relocation out of `backend/category/src/demo/` | **DONE in Rev. 4** — backend now lives at `backend/src/main/java/ee/nutrionista/` |
 
 ### Backlog-ready extensions (the schema already permits them)
 
