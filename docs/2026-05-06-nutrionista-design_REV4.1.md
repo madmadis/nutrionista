@@ -1,8 +1,8 @@
 # Nutrionista — Design Spec
 
-**Date:** 2026-05-06 (initial), 2026-05-08 (rev. 2 — pivoted to e-commerce), 2026-05-14 (rev. 3 — schema aligned to DB model XML, authentication removed, project renamed), 2026-05-14 (rev. 3.1 — minimal login restored as a UI-only role hint; backend still has no security enforcement), 2026-05-15 (rev. 4 — tables singularized, `role` lookup table added, build tool switched to Gradle, backend bumped to Spring Boot 4, MapStruct + p6spy added, manual init-scripts replace Flyway as the current local-DB workflow, repository moved to `github.com/madmadis/nutrionista`)
+**Date:** 2026-05-06 (initial), 2026-05-08 (rev. 2 — pivoted to e-commerce), 2026-05-14 (rev. 3 — schema aligned to DB model XML, authentication removed, project renamed), 2026-05-14 (rev. 3.1 — minimal login restored as a UI-only role hint; backend still has no security enforcement), 2026-05-15 (rev. 4 — tables singularized, `role` lookup table added, build tool switched to Gradle, backend bumped to Spring Boot 4, MapStruct + p6spy added, manual init-scripts replace Flyway as the current local-DB workflow, repository moved to `github.com/madmadis/nutrionista`), 2026-05-16 (rev. 4.1 — schema realigned to `docs/nutrionista_data_model_v2.xml` / `docs/nutrionista_data_model_v2.pdf`; 16 tables; commerce tables `order` + `order_item` now modelled; `cart` + `cart_item` moved into the DB; `billing` + `courier` split out of the order DTO; `contact` table added for feedback; `nutrient.in_stock` replaced by `nutrient.stock_quantity`; image link inverted to `nutrient_image.nutrient_id`)
 **Type:** School project, team of 3, 2-week MVP
-**Status:** Rev. 4. Schema canonical reference is `docs/database/2_create.sql` (Redgate model file `docs/madis/nutrionista_2026-05-14_09_09.xml` is the source-of-truth for the diagram but lags behind the SQL after the singularization pass — diagram needs a re-export). **Commerce tables (`orders`, `order_items`) are not yet modelled and remain the first post-revision task.** Backend exists as a Spring Boot skeleton only (`NutrionistaApplication` plus configuration); no controllers, entities, repositories, or auth endpoints are implemented yet — §6 still describes the intended minimal login but neither side is wired up (see memory note `project-auth-misalignment`).
+**Status:** Rev. 4.1. Canonical data model is the v2 pair `docs/nutrionista_data_model_v2.xml` (Redgate model) + `docs/nutrionista_data_model_v2.pdf` (rendered ERD). `docs/database/2_create.sql` is **out of date** versus v2 (it still describes the Rev. 4 9-table singular schema with `in_stock` + owned `nutrient.image_id`) — regenerating it from the v2 model is the first post-revision task. The Rev. 4 Redgate file `docs/madis/nutrionista_2026-05-14_09_09.xml` is **superseded** by the v2 model and should not be edited further. Backend exists as a Spring Boot skeleton only (`NutrionistaApplication` plus configuration); no controllers, entities, repositories, or auth endpoints are implemented yet. §6 still describes the intended minimal login but Rev. 4.1 introduces a real tension: v2 makes `cart.user_id` and `contact.user_id` NOT NULL, so those flows now require an authenticated user (see §6 for how the team will handle this without bringing back real sessions).
 
 ---
 
@@ -15,21 +15,21 @@ Nutrionista is a web-based **vitamin and supplement online store** that combines
 3. How it interacts with other nutrients
 4. What deficiency symptoms it addresses
 
-A visitor can browse the catalog, read nutrient information, and (once the commerce tables land) add products to a cart and complete a checkout. There is **no admin login** — admin pages live at known URLs and are not access-controlled in the MVP.
+A logged-in visitor can browse the catalog, read nutrient information, add products to their server-side cart, and complete a checkout that captures billing details and a courier choice. There is **no admin login** — admin pages live at known URLs and are not access-controlled in the MVP. The public side does require login for cart use (because `cart.user_id` is NOT NULL in v2); this is treated as a usability tax, not a security boundary — see §6.
 
 The project is built by a 3-person student team. The primary success criteria are:
 
-- The end-to-end purchase flow works (browse → product detail → cart → checkout → confirmation) **once `orders` / `order_items` are added**.
-- The educational content is preserved on each product page (functions, absorption, interactions, deficiencies — all modelled through the generalized `properties` table).
+- The end-to-end purchase flow works: browse → product detail → cart (server-persisted) → checkout (billing + courier) → confirmation.
+- The educational content is preserved on each product page (functions, absorption, interactions, deficiencies — all modelled through the generalized `property` table).
 - The codebase is organized and clearly understandable.
 - The result is presentable in a class demo.
 
-**Scope discipline.** The full UI mockup at `docs/nutrionista-mockup.html` shows additional features (vitamin quiz with personal recommendations, wishlist, bundles, blog, FAQ, reorder reminders, brand/goal filters, live chat). These are **out of scope for the MVP** — see §14.
+**Scope discipline.** The full UI mockup at `docs/nutrionista-mockup.html` shows additional features (vitamin quiz with personal recommendations, wishlist, bundles, blog, FAQ, reorder reminders, brand/goal filters, live chat). These are **out of scope for the MVP** — see §14. The `contact` table now in the schema covers the basic feedback form; everything else stays cut.
 
 ## 2. Constraints
 
 - **Team size:** 3 students collaborating via GitHub.
-- **Schema size:** 8 tables as defined in `docs/nutrionista_2026-05-14_09_09.xml` (canonical DB model). The schema generalizes the original 12 educational tables into a `properties` + `nutrient_properties` pair, dropping the per-domain junction tables. `orders` and `order_items` will be added in a follow-up revision.
+- **Schema size:** 16 tables as defined in `docs/nutrionista_data_model_v2.xml` / `.pdf` (canonical DB model). The schema generalizes the original 12 educational tables into a `property` + `nutrient_property` pair; commerce is modelled across `order` / `order_item` / `cart` / `cart_item` / `billing` / `courier`; user-side feedback uses a `contact` table.
 - **Deadline:** 2 weeks from spec approval. Scope cuts in §14 are non-negotiable inside this window.
 - **Hosting:** Free tiers only — Render (backend + database) and Vercel (frontend).
 - **Each student works on their own PC** but the deployed app is the demo target.
@@ -71,46 +71,52 @@ The project is built by a 3-person student team. The primary success criteria ar
                   ▼
    ┌──────────────────────────────┐
    │  PostgreSQL on Render        │
-   │  - 9 tables (singularized)   │
-   │  - + orders/order_items TBD  │
+   │  - 16 tables (v2 model)      │
    │  - Seeded via init scripts   │
    └──────────────────────────────┘
 ```
 
 **Key flows:**
 
-- **Login (UI role-gating):** Vue → `POST /api/login` with `{username, password}` → Spring Boot looks up `users.username`, BCrypt-checks the password against `users.password_hash` → returns `{username, role}` (no token). Vue stores the response in a Pinia `authStore` and shows admin UI when `role === 'ADMIN'`. The backend has **no enforcement** on top of this — `/api/admin/**` stays openly accessible (see §6).
-- **Public browse:** Vue → `GET /api/nutrients` → Spring Boot → PostgreSQL → JSON. Same for `GET /api/nutrients/{id}` (product detail with full educational content joined from `properties` and `nutrient_properties`).
-- **Cart:** Cart lives **in the browser** (Pinia store, persisted to `localStorage`). Adding/removing items never touches the backend until checkout. A guest can fill a cart at any time.
-- **Checkout (planned, depends on `orders`/`order_items`):** Vue posts cart contents + shipping form to `POST /api/orders`. Backend creates an `orders` row + N `order_items` rows in a single transaction, snapshots `unit_price` from the current `nutrients.price`, and returns the new `order_id`. Vue clears the cart and shows the confirmation page. **This flow lights up once the commerce migration lands.**
-- **Admin write:** Admin pages (`/admin/*` in the SPA, `/api/admin/**` in the API) are openly accessible — there is no login. Anyone who knows the URL can edit catalog data. This is an explicit MVP trade-off (see §6) and must be addressed before any real deployment beyond the demo.
+- **Login (UI role-gating + cart owner):** Vue → `POST /api/login` with `{username, password}` → Spring Boot looks up `user.username`, BCrypt-checks the password against `user.password_hash` → returns `{userId, username, role}` (no token). Vue stores the response in a Pinia `authStore` and shows admin UI when `role === 'ADMIN'`. The backend has **no enforcement** beyond the login lookup — `/api/admin/**` and `/api/cart` stay openly accessible to any client willing to send a `userId` (see §6). The login is required *in the SPA* before adding to cart, because `cart.user_id` is NOT NULL.
+- **Public browse:** Vue → `GET /api/nutrients` → Spring Boot → PostgreSQL → JSON. Same for `GET /api/nutrients/{id}` (product detail with full educational content joined from `property` and `nutrient_property`).
+- **Cart (server-side):** On first add, Vue calls `POST /api/users/{userId}/cart` to lazily create the user's `cart` row, then `POST /api/carts/{cartId}/items` to add a `cart_item`. Subsequent reads use `GET /api/users/{userId}/cart`. The SPA mirrors the server-side cart into a Pinia store for fast reads but the source of truth is the DB — clearing browser storage no longer drops the cart.
+- **Checkout:** Vue posts the shipping form (`first_name`, `last_name`, `address`, `courier_id`) to `POST /api/billings`, receives `billing_id`, then `POST /api/orders` with `{billing_id, collect_from_store, items: [{nutrientId, quantity}]}`. Backend creates one `order` row + N `order_item` rows in a single transaction, snapshots `order_item.price` from the current `nutrient.price`, computes `order_item.total_sum = price * quantity` and `order.total_sum = SUM(order_item.total_sum)`, sets `order.status = 'P'` (PENDING), deletes the source `cart_item` rows, and returns the new `order_id`. Vue navigates to `/confirmation/:id`.
+- **Admin write:** Admin pages (`/admin/*` in the SPA, `/api/admin/**` in the API) are openly accessible — there is no login. Anyone who knows the URL can edit catalog data, change order status, or read contact submissions. This is an explicit MVP trade-off (see §6) and must be addressed before any real deployment beyond the demo.
 - **Cold-start mitigation:** A free cron-job.org job pings `/actuator/health` every 14 minutes, keeping the Render free-tier backend warm.
 
-## 5. Database Schema (9 tables, singularized in Rev. 4)
+## 5. Database Schema (16 tables — v2 model)
 
-The canonical SQL lives in `docs/database/2_create.sql`. The original Redgate model file (`docs/madis/nutrionista_2026-05-14_09_09.xml`) is the diagram source but is behind after Rev. 4 — re-export when convenient. Compared to the original 12-table educational spec, the team generalized the four lookup tables (functions, absorption methods, absorption factors, deficiency symptoms) into a single `property` table with a `type` discriminator, and their per-domain junctions into the single `nutrient_property` table. `interaction_types` was replaced by `color_code` so the UI color is part of the lookup itself. Images live in a dedicated `nutrient_image` table that stores binary data and is owned by `nutrient.image_id`.
+The canonical data model is the pair `docs/nutrionista_data_model_v2.xml` (Redgate source) + `docs/nutrionista_data_model_v2.pdf` (rendered ERD). `docs/database/2_create.sql` currently reflects the older Rev. 4 9-table schema and **must be regenerated** to match v2 — that's the first post-revision task (see §12). The SQL in this section is the v2 schema translated to plain Postgres DDL; the Redgate file is authoritative for column order, constraint IDs, and diagram layout.
 
-**Rev. 4 changes vs. Rev. 3:**
+Compared to the Rev. 4 schema, v2 keeps the generalized `property` + `nutrient_property` pair and the `color_code` interaction lookup, but adds the full commerce surface (`order`, `order_item`, `cart`, `cart_item`, `billing`, `courier`), introduces a `contact` table for feedback, and changes three things on `nutrient` / `nutrient_image`: stock becomes numeric, the image FK direction flips, and a nutrient can now have many images.
 
-- All table names are **singular** (`category`, `nutrient`, `property`, `nutrient_property`, `nutrient_image`, `nutrient_interaction`, `color_code`, `role`, `"user"`). REST collection URIs stay plural by convention (see §7).
-- New `role` lookup table; `"user".role_id INT NOT NULL REFERENCES role(id)` replaces the previous `users.role` CHECK-constrained string.
-- `"user"` is quoted because `user` is a reserved word in PostgreSQL.
-- `nutrient.image_id` is now **nullable** with `ON DELETE SET NULL` — no placeholder image needs to be seeded.
-- All FK columns renamed to singular form (`nutrient_id`, `property_id`, `role_id`) — previously `nutrients_id`, `properties_id`, `roles_id`.
-- Constraint names made descriptive (`nutrient_category_fk`, `nutrient_price_ck`, etc.) — previously `FK_0`, `CHECK_1`, etc.
+**Rev. 4.1 changes vs. Rev. 4:**
 
-**Highlights (unchanged from Rev. 3 unless noted):**
+- **Cart now lives in the DB.** `cart (id, user_id)` + `cart_item (id, cart_id, nutrient_id, quantity)`. `cart.user_id` is NOT NULL, so a user must be logged in to add to cart (see §6 for how this is reconciled with "no real auth").
+- **Commerce tables exist.** `order (id, billing_id, total_sum, status CHAR(1), collect_from_store BOOLEAN)` + `order_item (id, order_id, nutrient_id, price, quantity, total_sum)`. No more "TBD".
+- **Order status is a `CHAR(1)` code**, not a string enum. The team picks the codes once in the seed script. Suggested: `P` = PENDING, `A` = PAID (anglicism of *Apaid*; the team can pick a different letter), `S` = SHIPPED, `C` = CANCELLED. The UI maps codes → labels on render.
+- **Billing + courier split out of the order row.** `billing (id, first_name, last_name, address, courier_id)` holds the customer's shipping form; `courier (id, name, type, api_key, endpoint_url)` holds the configured carriers. `order.billing_id → billing.id` is NOT NULL; `billing.courier_id → courier.id` is nullable (free-text/pickup orders skip the carrier).
+- **`nutrient.stock_quantity INT NOT NULL`** replaces `nutrient.in_stock BOOLEAN`. The catalog grid renders "in stock / out of stock" by `stock_quantity > 0`; admin edits the integer directly.
+- **Image FK direction flipped.** `nutrient.image_id` is **gone**; `nutrient_image (id, nutrient_id, image_data)` has a NOT NULL `nutrient_id` back-pointer. A nutrient can now own **many** images. The product detail page picks the first (`MIN(id)`) or all of them — to be decided when the gallery UI is wired up.
+- **`contact (id, user_id, first_name, last_name)`** is now in the schema for the basic feedback form. Like cart, it makes `user_id` NOT NULL — only logged-in users can submit feedback.
+- **`order` has no direct `user_id` FK.** The model links order → billing only. Order history "my orders" therefore can't be implemented without an additional FK or a query that joins through `cart` (which is deleted at checkout). Treat order history as future work — see §14.
+- **Bug carried forward from the v2 model:** `nutrient_property` has a CHECK constraint `nutrient_property_effect_ck` that references `effect_type IN ('ENHANCE','INHIBIT')`, but the `effect_type` column itself is **missing** from the table definition. The team must either (a) add `effect_type VARCHAR(10)` back to the column list when generating `2_create.sql`, or (b) drop the check. Recommended: (a) — the absorption-factor UI needs the column.
+
+**Highlights:**
 
 - **Generalized lookups.** `property` holds rows of every educational property (function / absorption method / absorption factor / deficiency symptom). The `type` column (`varchar(3)`) discriminates which kind of property each row is — e.g. `FN`, `AM`, `AF`, `DS`. The team will fix the exact codes in the seed script.
-- **Generalized junction.** `nutrient_property` (id, nutrient_id, property_id, effect_type) links nutrients to any property. `effect_type` is constrained to `ENHANCE` / `INHIBIT` only — the row exists only when there's something to say (so the "NEUTRAL default" idea from Rev. 3 is dropped; absence of a row = neutral).
+- **Generalized junction.** `nutrient_property` (id, nutrient_id, property_id, **effect_type**) links nutrients to any property. `effect_type` is constrained to `ENHANCE` / `INHIBIT` only — the row exists only when there's something to say (absence of a row = neutral).
 - **Color-coded interactions.** `color_code` is the interaction-quality lookup — each row has a label (`GOOD`, `NEUTRAL`, `BAD`) plus the hex/CSS color the UI should render for that label. `nutrient_interaction` references `color_code` directly through `interaction_type_id`. The three labels match the mockup's `Hea` / `Neutraalne` / `Halb` user-facing wording.
-- **Binary images.** `nutrient_image.image_data` is `bytea`. The link is **owned by `nutrient.image_id`** (one image per nutrient, no back-pointer on `nutrient_image`). Option (a) of the Rev. 4 decision: keep things simple, accept the one-image-per-nutrient ceiling. If future work needs multiple images, drop `nutrient.image_id` and add a `nutrient_id` column to `nutrient_image` instead.
-- **`role` + `"user"` exist, but the login flow isn't wired yet.** §6 still describes the intended minimal-login behaviour; neither the backend `AuthController` nor the frontend `authStore` matches that description today (see memory note `project-auth-misalignment`).
-- **`orders` + `order_items` are intentionally not in this revision.** They will be added as a follow-up; the SPA's checkout flow stays a `cart.clear() + alert()` placeholder until then.
+- **Binary images, many per nutrient.** `nutrient_image.image_data BYTEA` stores the bytes; `nutrient_image.nutrient_id INT NOT NULL REFERENCES nutrient(id)` is the back-pointer. Deleting a nutrient cascades to its images.
+- **`role` + `"user"` exist, but the login flow isn't wired yet.** §6 describes the intended minimal-login behaviour; neither the backend `AuthController` nor the frontend `authStore` exists today.
+- **Courier is configurable, not hard-coded.** The `api_key` / `endpoint_url` columns suggest the team intended to plug into a real shipping provider's API; for the MVP a single seeded `courier` row ("Local pickup" or "Omniva") is enough.
 
-### Tables (canonical SQL: `docs/database/2_create.sql`)
+### Tables (will become `docs/database/2_create.sql` after regeneration)
 
 ```sql
+-- ─── Catalog (foundation) ──────────────────────────────────────────────────
+
 -- 1. category
 CREATE TABLE category (
   id          SERIAL PRIMARY KEY,
@@ -118,24 +124,23 @@ CREATE TABLE category (
   description TEXT
 );
 
--- 2. nutrient_image  (created before `nutrient` because nutrient.image_id references it)
-CREATE TABLE nutrient_image (
-  id         SERIAL PRIMARY KEY,
-  image_data BYTEA NOT NULL
-);
--- No back-pointer to `nutrient`: link is owned by `nutrient.image_id` (one-image-per-nutrient).
-
--- 3. nutrient
+-- 2. nutrient
 CREATE TABLE nutrient (
+  id             SERIAL PRIMARY KEY,
+  name           VARCHAR(100) UNIQUE NOT NULL,
+  description    VARCHAR(500),
+  category_id    INTEGER NOT NULL REFERENCES category(id),
+  price          NUMERIC(8,2) NOT NULL DEFAULT 0 CHECK (price >= 0),  -- € amount
+  stock_quantity INTEGER NOT NULL,
+  created_at     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 3. nutrient_image  (many per nutrient — back-pointer FK)
+CREATE TABLE nutrient_image (
   id          SERIAL PRIMARY KEY,
-  name        VARCHAR(100) UNIQUE NOT NULL,
-  description VARCHAR(500),
-  category_id INTEGER NOT NULL REFERENCES category(id),
-  price       NUMERIC(8,2) NOT NULL DEFAULT 0 CHECK (price >= 0),  -- € amount
-  in_stock    BOOLEAN NOT NULL DEFAULT true,
-  created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  image_id    INTEGER REFERENCES nutrient_image(id) ON DELETE SET NULL
+  nutrient_id INTEGER NOT NULL REFERENCES nutrient(id) ON DELETE CASCADE,
+  image_data  BYTEA NOT NULL
 );
 
 -- 4. property  (generalized lookup for functions / absorption / factors / deficiencies)
@@ -147,11 +152,14 @@ CREATE TABLE property (
 );
 
 -- 5. nutrient_property  (generalized junction)
+-- NOTE: the v2 XML omits the effect_type column but keeps a CHECK that references it.
+-- The column is restored here so the constraint resolves and the absorption-factor UI works.
 CREATE TABLE nutrient_property (
   id          SERIAL PRIMARY KEY,
   nutrient_id INTEGER NOT NULL REFERENCES nutrient(id) ON DELETE CASCADE,
   property_id INTEGER NOT NULL REFERENCES property(id),
-  effect_type VARCHAR(10) CHECK (effect_type IN ('ENHANCE','INHIBIT'))
+  effect_type VARCHAR(10),
+  CONSTRAINT nutrient_property_effect_ck CHECK (effect_type IN ('ENHANCE','INHIBIT'))
 );
 
 -- 6. color_code  (interaction-type lookup, includes the UI color)
@@ -168,10 +176,12 @@ CREATE TABLE nutrient_interaction (
   related_nutrient_id INTEGER NOT NULL REFERENCES nutrient(id) ON DELETE CASCADE,
   interaction_type_id INTEGER NOT NULL REFERENCES color_code(id),
   description         VARCHAR(200),
-  CHECK (nutrient_id <> related_nutrient_id)
+  CONSTRAINT nutrient_interaction_self_ck CHECK (nutrient_id <> related_nutrient_id)
 );
 
--- 8. role  (Rev. 4 — replaces the old users.role CHECK enum)
+-- ─── Identity ──────────────────────────────────────────────────────────────
+
+-- 8. role
 CREATE TABLE role (
   id   SERIAL PRIMARY KEY,
   name VARCHAR(10) UNIQUE NOT NULL   -- ADMIN | USER, seeded once
@@ -185,19 +195,86 @@ CREATE TABLE "user" (
   created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   role_id       INTEGER NOT NULL REFERENCES role(id)
 );
+
+-- ─── Shipping & billing ────────────────────────────────────────────────────
+
+-- 10. courier
+CREATE TABLE courier (
+  id           SERIAL PRIMARY KEY,
+  name         VARCHAR(255) NOT NULL,
+  type         CHAR(1) NOT NULL,           -- e.g. P = parcel-locker, H = home delivery, S = in-store (codes set at seed time)
+  api_key      VARCHAR(255),
+  endpoint_url VARCHAR(255)
+);
+
+-- 11. billing
+CREATE TABLE billing (
+  id         SERIAL PRIMARY KEY,
+  first_name VARCHAR(255) NOT NULL,
+  last_name  VARCHAR(255) NOT NULL,
+  address    VARCHAR(255) NOT NULL,
+  courier_id INTEGER REFERENCES courier(id)
+);
+
+-- ─── Commerce ──────────────────────────────────────────────────────────────
+
+-- 12. cart  (per-user — must be logged in)
+CREATE TABLE cart (
+  id      SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES "user"(id) ON DELETE CASCADE
+);
+
+-- 13. cart_item
+CREATE TABLE cart_item (
+  id          SERIAL PRIMARY KEY,
+  cart_id     INTEGER NOT NULL REFERENCES cart(id) ON DELETE CASCADE,
+  nutrient_id INTEGER NOT NULL REFERENCES nutrient(id),
+  quantity    INTEGER NOT NULL
+);
+
+-- 14. "order"  (quoted — `order` is a reserved word)
+CREATE TABLE "order" (
+  id                 SERIAL PRIMARY KEY,
+  billing_id         INTEGER NOT NULL REFERENCES billing(id),
+  total_sum          NUMERIC(8,2) NOT NULL,
+  status             CHAR(1) NOT NULL,    -- P | A | S | C (codes set at seed time)
+  collect_from_store BOOLEAN NOT NULL
+);
+
+-- 15. order_item  (line totals are denormalized — price * quantity stored as total_sum for audit)
+CREATE TABLE order_item (
+  id          SERIAL PRIMARY KEY,
+  order_id    INTEGER NOT NULL REFERENCES "order"(id) ON DELETE CASCADE,
+  nutrient_id INTEGER NOT NULL REFERENCES nutrient(id),
+  price       NUMERIC(8,2) NOT NULL,  -- snapshot of nutrient.price at checkout
+  quantity    INTEGER NOT NULL,
+  total_sum   NUMERIC(8,2) NOT NULL   -- = price * quantity, computed in the service
+);
+
+-- ─── Feedback ──────────────────────────────────────────────────────────────
+
+-- 16. contact  (user feedback form — minimal in v2)
+CREATE TABLE contact (
+  id         SERIAL PRIMARY KEY,
+  user_id    INTEGER NOT NULL REFERENCES "user"(id),
+  first_name VARCHAR(255) NOT NULL,
+  last_name  VARCHAR(255) NOT NULL
+);
 ```
 
 ### Schema notes
 
-- **Property discrimination.** `property.type` is a 3-character code, NOT a CHECK-constrained enum. Pick the codes once (e.g. `FN`, `AM`, `AF`, `DS`) and document them in the seed script's comment block. Application code must filter by `type` to render the right section of the product detail page.
-- **`nutrient_property.effect_type`.** Nullable since Rev. 4 — only set for absorption-factor rows (`property.type='AF'`), where the UI presents `ENHANCE` or `INHIBIT`. For other property kinds the column stays `NULL` and the UI hides the field. The Rev. 3 "always-set, default NEUTRAL" rule was dropped because it added a sentinel value that meant the same thing as absence.
+- **Property discrimination.** `property.type` is a 3-character code, NOT a CHECK-constrained enum. Pick the codes once (e.g. `FN`, `AM`, `AF`, `DS`) and document them in the seed script. Application code filters by `type` to render the right section of the product detail page.
+- **`nutrient_property.effect_type`.** Only set for absorption-factor rows (`property.type='AF'`). For other property kinds the column stays `NULL` and the UI hides the field. The v2 XML's missing-column bug must be fixed when generating `2_create.sql` (see Rev. 4.1 changes above).
 - **`nutrient_interaction` is directional** — `(A, B, BAD)` means "taking A together with B is bad for B". Inserting the inverse pair would make a different (possibly incorrect) claim, so admin UI must label the two dropdowns clearly.
 - **`color_code` is what the dot panel reads.** The frontend's colored-dot component looks up the color via `interaction_type_id`. Putting the color in the DB row means the UI doesn't need a hard-coded mapping.
-- **`nutrient.image_id` is nullable** (Rev. 4 change). A nutrient without artwork stores `NULL`; the frontend falls back to a static placeholder image. The Rev. 3 plan of seeding a placeholder image row to satisfy a `NOT NULL` constraint is no longer needed. `ON DELETE SET NULL` means deleting an image row doesn't cascade-delete its nutrient.
-- **Script ordering.** Because `nutrient.image_id` references `nutrient_image(id)`, `nutrient_image` must be created first. The order in `docs/database/2_create.sql` matches: `category`, `nutrient_image`, then `nutrient`, then the join tables, then `role`, then `"user"`.
-- **`ON DELETE CASCADE`** is set on the two `nutrient_interaction.*` FKs and on `nutrient_property.nutrient_id` (Rev. 4: cascading deletes through the junction is the expected admin behaviour when you delete a nutrient). `nutrient_property.property_id` stays restrictive (deleting a `property` row that still has links should fail loudly). `nutrient.category_id` stays restrictive for the same reason.
-- **No timestamps on lookup or junction tables.** Only `nutrient` and `"user"` have `created_at`. The lookup tables (`category`, `property`, `color_code`, `role`) and the binary `nutrient_image` table are seeded and rarely edited.
-- **Cart is not in the schema** and never will be — cart state lives in the browser (Pinia store + `localStorage`). It only becomes rows in the future `orders` / `order_items` tables at checkout.
+- **`nutrient_image.nutrient_id` is NOT NULL** — an image row can't exist without a nutrient. Cascade-delete is appropriate because the image is intrinsic to its nutrient.
+- **`order.status` is `CHAR(1)`** — no DB-level CHECK constraint is enforced by v2, so the application layer must validate the code on every write. A follow-up migration could add `CHECK (status IN ('P','A','S','C'))` once the codes are agreed.
+- **`order_item.total_sum` is denormalized.** The service must compute `price * quantity` and write it on insert; admin updates that change either column must rewrite `total_sum` in the same transaction.
+- **No FK from `order` to `user`.** The model links order → billing only; the customer's identity lives in the `billing` row (first_name + last_name). A logged-in user's userId is *not* persisted on the order — so "my orders" listings are not implementable without an additional column, which is deferred to a post-MVP migration.
+- **Cart deletion at checkout.** When `POST /api/orders` succeeds, the service deletes the source `cart_item` rows (and optionally the `cart` row). `cart_item.cart_id` is `ON DELETE CASCADE` so deleting the cart wipes the items.
+- **`ON DELETE CASCADE`** is set on: `nutrient_interaction.*` FKs, `nutrient_property.nutrient_id`, `nutrient_image.nutrient_id`, `cart.user_id`, `cart_item.cart_id`, `order_item.order_id`. Other FKs stay restrictive (deleting a category / property / nutrient / billing / courier with references should fail loudly).
+- **No timestamps on lookup, junction, or commerce tables.** Only `nutrient` and `"user"` have `created_at` — v2 carries this forward from Rev. 4. `order.created_at` would be useful for sorting in `/admin/orders` and is the most likely first addition in a future revision.
 
 #### Explanatory: why a single generalized `property` table
 
@@ -226,42 +303,57 @@ A row reads like a sentence: **"`nutrient_id` is `interaction_type` with `relate
 
 #### Explanatory: timestamps only on `nutrient` and `"user"`
 
-`nutrient` is the table admins edit most often (names, descriptions, prices, in-stock flag), so `created_at` / `updated_at` earn their keep. `"user"` carries only `created_at` for account-audit purposes; passwords change so rarely that `updated_at` is overhead. Lookup tables (`category`, `property`, `color_code`, `role`) are seeded once and don't need audit columns.
+`nutrient` is the table admins edit most often (names, descriptions, prices, stock quantity), so `created_at` / `updated_at` earn their keep. `"user"` carries only `created_at` for account-audit purposes; passwords change so rarely that `updated_at` is overhead. Lookup tables (`category`, `property`, `color_code`, `role`, `courier`) are seeded once and don't need audit columns. The commerce tables (`order`, `order_item`, `cart`, `cart_item`, `billing`) lack timestamps in v2 — `order.created_at` is the most likely first addition in a future revision.
+
+#### Explanatory: the order ↔ billing ↔ courier triangle
+
+The v2 model splits the checkout form across three tables rather than fattening the `order` row:
+
+- **`billing`** holds *who* the order is for and *where* it's going — `first_name`, `last_name`, `address`. One billing row per checkout submission. (Future revisions could deduplicate by user, but for the MVP each order gets its own billing row.)
+- **`courier`** holds *how* the parcel gets there — seeded once with the carriers the team supports. The `api_key` + `endpoint_url` columns suggest an eventual integration with a real shipping provider (Omniva, Smartpost, DPD); for the MVP one row is enough.
+- **`order`** holds the commerce state — `total_sum`, `status`, `collect_from_store` flag — and points at the billing row via `billing_id`.
+
+The flow at checkout is therefore: insert one `billing` row → take its id → insert one `order` row with `billing_id` → insert N `order_item` rows. If `collect_from_store = true`, `billing.courier_id` is left NULL.
 
 ## 6. Authentication
 
-**The MVP has no security enforcement, but it does have a UI-only login for role-gating.**
+**The MVP has no security enforcement, but it does have a UI-only login for role-gating *and* for owning cart / contact rows.**
 
-There is a single `POST /api/login` endpoint. It looks up `users.username`, BCrypt-checks the password against the seeded `password_hash`, and returns `{username, role}`. The SPA stores this in a Pinia `authStore` (persisted to `localStorage`) and uses `auth.isAdmin` (`role === 'ADMIN'`) to gate the admin UI: the NavBar admin dropdown, the `/admin/*` route guards (`meta: { requiresAdmin: true }`), and the "Edit" / "Delete" buttons on the public catalog pages.
+There is a single `POST /api/login` endpoint. It looks up `user.username`, BCrypt-checks the password against the seeded `password_hash`, and returns `{userId, username, role}`. The SPA stores this in a Pinia `authStore` (persisted to `localStorage`) and uses it for three things:
 
-That is the entire mechanism. There is no token, no session, no `Authorization` header, no server-side admin filter, no `register` endpoint, and no `logout` endpoint. **The role is a UI hint, not a security boundary.**
+1. **Role-gating the admin UI** — `auth.isAdmin` (`role === 'ADMIN'`) drives the NavBar admin dropdown, the `/admin/*` route guards (`meta: { requiresAdmin: true }`), and the "Edit" / "Delete" buttons on the public catalog pages.
+2. **Owning the cart** — `cart.user_id` is NOT NULL, so any "Add to cart" click requires a logged-in user. The SPA redirects anonymous visitors to `/login` when they hit "Lisa ostukorvi".
+3. **Owning a contact submission** — same story for the feedback form: `contact.user_id` is NOT NULL.
+
+That is the entire mechanism. There is no token, no session, no `Authorization` header, no server-side admin filter, no `register` endpoint, and no `logout` endpoint. **The role is a UI hint, not a security boundary**, and **the `userId` is a client-supplied parameter, not a verified identity** — anyone calling `POST /api/carts/{cartId}/items` with somebody else's `cartId` will succeed.
 
 ### Concretely:
 
-- `POST /api/login` exists. Body: `{username, password}`. On success: `{username, role}` (200). On mismatch: 401. No cookie set, no token returned.
-- The `users` table is seeded with the team's admin accounts (`madis` / `kaili` / `rain`, all role `ADMIN`) plus a fallback `admin@nutrionista.ee`. Passwords are bcrypt hashes in `V8__seed_admins.sql`.
-- `jbcrypt` stays in `backend/pom.xml` — it's what `AuthService` uses to verify the seeded hashes (`BCrypt.checkpw`).
-- `/api/**` endpoints (including `/api/admin/**`) are openly accessible. Anyone hitting them directly with `curl` succeeds regardless of role. The SPA's role-gate is cosmetic.
-- The Vue SPA maintains an `authStore` with `{username, role}` but **no token**. The cart and any future order submission are still anonymous from the backend's perspective.
+- `POST /api/login` exists. Body: `{username, password}`. On success: `{userId, username, role}` (200). On mismatch: 401. No cookie set, no token returned.
+- The `user` table is seeded with the team's admin accounts (`madis` / `kaili` / `rain`, all role `ADMIN`) plus at least one `USER`-role demo account so the public cart flow is demonstrable. Passwords are bcrypt hashes set in the seed script.
+- `jbcrypt` stays on the backend classpath — `AuthService` uses it to verify the seeded hashes (`BCrypt.checkpw`).
+- `/api/**` endpoints (including `/api/admin/**` and `/api/cart`) are openly accessible. Anyone hitting them directly with `curl` succeeds regardless of role. The SPA's role-gate is cosmetic; the cart's user ownership is enforced only by the SPA passing the logged-in `userId`.
+- The Vue SPA maintains an `authStore` with `{userId, username, role}` but **no token**. The cart and order submissions identify the user only by the client-supplied `userId` in the request body.
 
 ### Why this minimal model (and not full auth)
 
 This is a 2-week school project that will be torn down or rewritten after the demo. The two weeks are better spent on:
 
-1. Filling out the educational schema (`properties`, `nutrient_properties`, `nutrient_interactions`, `color_codes`).
+1. Filling out the educational schema (`property`, `nutrient_property`, `nutrient_interaction`, `color_code`).
 2. Building the catalog + product detail experience that proves Nutrionista is more than a generic store.
-3. Adding the `orders` / `order_items` tables and the checkout flow.
+3. Wiring the commerce flow end-to-end against the already-modelled `order` / `order_item` / `billing` / `courier` tables.
 
-A real auth subsystem (sessions, password reset, CSRF awareness, admin-vs-user split, lockout policy, refresh tokens) is a meaningful amount of code and presents little to a class demo audience that cannot inspect the security model live. The minimal login keeps the demo's "log in as Madis → admin buttons appear" moment without the dead-weight subsystem.
+A real auth subsystem (sessions, password reset, CSRF awareness, admin-vs-user split, lockout policy, refresh tokens) is a meaningful amount of code and presents little to a class demo audience that cannot inspect the security model live. The minimal login keeps the demo's "log in as Madis → admin buttons appear" moment, plus the new "log in as a regular user → cart works" moment, without the dead-weight subsystem.
 
 ### Risk acknowledgement
 
-- **Anyone hitting `/api/admin/**` with `curl` can edit your catalog.** The SPA's role-gate stops casual visitors who use the UI, not anyone who reads this spec. Do not seed real product data you care about; treat the demo content as throwaway.
-- **Future revisions can upgrade to real auth** without a schema change for `users`. The previous "users + sessions + BCrypt + custom filter" design (in the git history of this spec, before commit `a93ed1b`) is the reference implementation when that revision arrives.
+- **Anyone hitting `/api/admin/**` with `curl` can edit your catalog**, change order status, or read contact submissions. The SPA's role-gate stops casual visitors who use the UI, not anyone who reads this spec. Do not seed real product data you care about; treat the demo content as throwaway.
+- **Cart and contact ownership is unverified.** Because the backend trusts whatever `userId` / `cartId` the client sends, a curious user can read/write another user's cart by guessing IDs. The SPA never exposes a way to do this; `curl` does.
+- **Future revisions can upgrade to real auth** without a schema change for `user`. The previous "users + sessions + BCrypt + custom filter" design (in the git history of this spec, before commit `a93ed1b`) is the reference implementation when that revision arrives. Wiring `cart`, `contact`, and (later) `order` to a server-verified user identity is the obvious follow-up.
 
-### `users` table retention rationale
+### `user` table retention rationale
 
-The XML keeps `users`. Rev. 3.1 actively uses it (login lookups). The seed (`V8__seed_admins.sql`) stays as the source of demo credentials. **Treat the `users` table as a credential store for the login UI, not as a security boundary** — the backend never asks "who is this request from?" beyond the explicit login call.
+The v2 model keeps `user` and adds direct FKs from `cart` and `contact`. The seed (now in `3_import.sql` or its Flyway replacement) stays as the source of demo credentials. **Treat the `user` table as a credential store for the login UI + an ownership anchor for cart/contact, not as a security boundary** — the backend never asks "who is this request from?" beyond the explicit login call.
 
 ## 7. API Surface (high level)
 
@@ -269,15 +361,15 @@ REST endpoints follow standard CRUD conventions. Detailed request/response shape
 
 **URI convention.** Even though tables are singular (`nutrient`, `category`, `color_code` …), collection URIs stay **plural** in line with common REST practice: `GET /api/nutrients`, `POST /api/categories`, etc. The plural in the URI refers to "the collection of nutrient resources", not the table name.
 
-**All endpoints below are open — there is no security enforcement. `POST /api/login` exists for UI role-gating only (see §6).**
+**All endpoints below are open — there is no security enforcement. `POST /api/login` exists for UI role-gating + cart/contact ownership only (see §6).**
 
-**Auth (UI role-gating only, see §6):**
+**Auth (UI role-gating + ownership hint, see §6):**
 
 ```
-POST   /api/login                        ← body: {username, password}; response: {username, role}
-                                            BCrypt-checks against users.password_hash; returns 401 on
+POST   /api/login                        ← body: {username, password}; response: {userId, username, role}
+                                            BCrypt-checks against "user".password_hash; returns 401 on
                                             mismatch. No token, no session — SPA uses the role to gate
-                                            admin UI client-side.
+                                            admin UI and the userId to own cart/contact rows.
 ```
 
 **Public catalog:**
@@ -286,25 +378,52 @@ POST   /api/login                        ← body: {username, password}; respons
 GET  /api/categories
 GET  /api/categories/{id}
 GET  /api/nutrients                      ← shop grid; supports ?category={id} filter
-GET  /api/nutrients/{id}                 ← product detail page payload: nutrient + price + in_stock
+GET  /api/nutrients/{id}                 ← product detail page payload: nutrient + price + stock_quantity
                                             + properties (filtered by property.type: FN/AM/AF/DS) + interactions
 GET  /api/nutrients/search?q={query}
 GET  /api/nutrients/highlights           ← home page "Esiletõstetud Tooted" — the 4 newest in-stock nutrients
-                                            (no `featured` column; selection is by `created_at DESC + in_stock = true LIMIT 4`)
+                                            (no `featured` column; selection is by `created_at DESC
+                                            + stock_quantity > 0 LIMIT 4`)
 GET  /api/color-codes                    ← interaction-type lookup (id, name, color_code)
-GET  /api/nutrient-images/{id}           ← returns image_data bytes for a nutrient_image row
+GET  /api/couriers                       ← carrier dropdown for the checkout form (id, name, type)
+GET  /api/nutrient-images/{id}           ← returns image_data bytes for a single nutrient_image row
+GET  /api/nutrients/{id}/images          ← list image ids for a nutrient (since a nutrient can have many)
 GET  /actuator/health                    ← keep-alive endpoint
+```
+
+**Cart (open — SPA passes the logged-in userId):**
+
+```
+GET    /api/users/{userId}/cart          ← returns the user's cart + items; lazily creates the cart row
+                                            if none exists. Response shape:
+                                            {id, userId, items: [{id, nutrientId, name, price, quantity}]}
+POST   /api/carts/{cartId}/items         ← body: {nutrientId, quantity}; adds a cart_item row.
+                                            If a row for that nutrient already exists, the quantity is
+                                            incremented instead of inserting a duplicate.
+PUT    /api/cart-items/{id}              ← body: {quantity}; update line quantity
+DELETE /api/cart-items/{id}              ← remove one line
+DELETE /api/carts/{cartId}/items         ← clear the cart (used at logout / after order placement)
+```
+
+**Checkout (open):**
+
+```
+POST   /api/billings                     ← body: {first_name, last_name, address, courier_id}; returns {id}
+POST   /api/orders                       ← body: {billing_id, collect_from_store, cart_id}
+                                            (server reads cart_item rows for cart_id, snapshots each
+                                             nutrient.price into order_item.price, computes total_sum,
+                                             inserts order + order_item rows, deletes cart_item rows,
+                                             returns {orderId, total_sum, status})
+GET    /api/orders/{id}                  ← order summary for the confirmation page (joins billing + items)
 ```
 
 **Admin catalog (open — no server-side auth, UI-gated by `auth.isAdmin`, see §6):**
 
 ```
 POST   /api/admin/nutrients
-PUT    /api/admin/nutrients/{id}         ← edit name, description, category, price, in_stock, image
-DELETE /api/admin/nutrients/{id}         ← cascades to `nutrient_property` + `nutrient_interaction` rows
-                                            (those FKs are ON DELETE CASCADE). Linked `nutrient_image` row
-                                            is NOT cascaded — image_id is set to NULL on the deleted side
-                                            but the image row itself stays until manually removed.
+PUT    /api/admin/nutrients/{id}         ← edit name, description, category, price, stock_quantity
+DELETE /api/admin/nutrients/{id}         ← cascades to nutrient_property + nutrient_interaction +
+                                            nutrient_image rows (all those FKs are ON DELETE CASCADE)
 POST   /api/admin/categories
 PUT    /api/admin/categories/{id}
 DELETE /api/admin/categories/{id}
@@ -314,38 +433,52 @@ DELETE /api/admin/properties/{id}
 POST   /api/admin/nutrient-properties    ← link a nutrient ↔ property (with effect_type for AF rows)
 PUT    /api/admin/nutrient-properties/{id} ← edit an existing link (typically to change effect_type)
 DELETE /api/admin/nutrient-properties/{id}
-POST   /api/admin/nutrient-interactions  ← nutrient → related_nutrient + interaction_type (color_codes id)
+POST   /api/admin/nutrient-interactions  ← nutrient → related_nutrient + interaction_type (color_code id)
 PUT    /api/admin/nutrient-interactions/{id}
 DELETE /api/admin/nutrient-interactions/{id}
 POST   /api/admin/color-codes            ← rarely edited; seeded once
 PUT    /api/admin/color-codes/{id}
 DELETE /api/admin/color-codes/{id}
-POST   /api/admin/nutrient-images        ← upload a new image (multipart bytea)
+POST   /api/admin/nutrient-images        ← upload a new image (multipart bytea + nutrient_id)
+DELETE /api/admin/nutrient-images/{id}
+POST   /api/admin/couriers               ← rarely edited after seed; included for completeness
+PUT    /api/admin/couriers/{id}
+DELETE /api/admin/couriers/{id}
 ```
 
-**Orders (TBD — `orders` + `order_items` will be added in the next revision):**
+**Admin commerce (open):**
 
 ```
-POST   /api/orders                       ← create order from cart contents; planned shape:
-                                            {items:[{nutrientId, quantity}], full_name, address,
-                                            city, postal_code, email, phone}
-GET    /api/admin/orders                 ← list all orders, supports ?status= filter
-GET    /api/admin/orders/{id}            ← single order detail
-PUT    /api/admin/orders/{id}/status     ← body: {status: 'PAID'|'SHIPPED'|'CANCELLED'}
+GET    /api/admin/orders                 ← list all orders, supports ?status= filter (P|A|S|C)
+GET    /api/admin/orders/{id}            ← single order detail (with billing + items joined)
+PUT    /api/admin/orders/{id}/status     ← body: {status: 'P'|'A'|'S'|'C'} (CHAR(1) codes — see §5)
+GET    /api/admin/billings/{id}          ← single billing row (admin can correct address mistakes)
+PUT    /api/admin/billings/{id}
+```
+
+**Feedback (contact form):**
+
+```
+POST   /api/contacts                     ← body: {userId, first_name, last_name}; inserts a contact row.
+                                            (The v2 schema doesn't carry the message body itself; the team
+                                             must either add a `message TEXT` column in a follow-up
+                                             revision or accept that the form only captures who reached
+                                             out, not what they said.)
+GET    /api/admin/contacts               ← list submissions for the admin inbox
 ```
 
 CORS: Spring Boot is configured to allow requests from `http://localhost:5173` (dev) and the Vercel frontend domain (prod). Update `CorsConfig` to include the deployed Vercel URL before the demo.
 
-### 7.1 Why no `/api/cart` endpoints
+### 7.1 Why the cart is now server-side
 
-The cart is **client-side only** (Pinia store + `localStorage`). Adding/removing items, changing quantities, and computing the running total are pure frontend operations. The first time the cart touches the backend is at checkout, when its contents become a `POST /api/orders` body.
+The v2 data model puts the cart in the DB (`cart` + `cart_item`) and ties it to a user (`cart.user_id` NOT NULL). The Rev. 4 plan of keeping cart state purely in the browser is no longer available without diverging from the canonical model. The new flow is: log in → SPA fetches `/api/users/{userId}/cart` (creating the row if needed) → add/remove/update items via `/api/carts/{cartId}/items` and `/api/cart-items/{id}`. The Pinia `cartStore` keeps a hot copy for fast reads but the source of truth is PostgreSQL.
 
-**Trade-offs of this decision:**
+**Trade-offs of the v2 server-side cart:**
 
-- **Saves time.** No `cart`/`cart_items` tables, no cart endpoints, no session/cart sync logic. For a 2-week build, this is the single biggest scope cut available without sacrificing the demo flow.
-- **Cart does not follow the user across devices.** A user adding items on their phone won't see them on their laptop. Acceptable for a school demo.
-- **Cart can be lost.** If the user clears browser storage, their cart vanishes. Acceptable; no real money at stake.
-- **Easier to demo offline.** The cart works even if the backend is asleep (Render free-tier cold start) — items add instantly because no API call is made.
+- **Cart follows the user across devices.** Logging in on a different laptop shows the same items. Good for the demo, even if it costs us a login step.
+- **Login is now required to add to cart.** A visitor who lands on the shop and hits "Lisa ostukorvi" gets bounced to `/login`. This raises the cost of the public catalog flow — the seed must include at least one non-admin demo account so the public path is presentable.
+- **More moving parts.** Adding an item now makes an HTTP call instead of mutating a local store. The SPA needs loading / error UI for every cart mutation, and a Render cold start delays the first add by ~30–60s if the backend is asleep. The keep-alive ping (§4) mitigates this.
+- **Schema clarity.** The order shape is cleaner — checkout passes `cart_id` and the server materialises `order` + `order_item` rows from the existing `cart_item` rows, instead of trusting a client-built JSON cart.
 
 ### 7.2 API Documentation (Swagger / OpenAPI)
 
@@ -401,17 +534,18 @@ The frontend is a Vue 3 SPA using **Vue Router** for navigation, **Pinia** for c
 | -------------------- | -------------------------------------------------------- |
 | `/`                  | **Avaleht** — welcome message + "Esiletõstetud Tooted" grid showing the 4 newest in-stock nutrients (`GET /api/nutrients/highlights`) |
 | `/shop`              | **Tooted** — full product grid + category filter          |
-| `/product/:id`       | **Toote leht** — encyclopedia content + price + Add to cart. Interactions shown as colored dots; the color comes from `color_codes.color_code` for each `interaction_type_id`. |
-| `/cart`              | **Ostukorv** — cart contents (from Pinia), quantities, remove, total, "Mine maksma" button |
-| `/checkout`          | **Kassa** — shipping form. Submits cart + form via `POST /api/orders` once the orders endpoint lands. Until then the page should clearly say "Tellimine peagi" rather than fake a success. |
-| `/confirmation/:id`  | **Tellimus kinnitatud** — order summary; lit up by the future orders endpoint |
-| `/login`             | **Sisselogimine** — username + password form; submits to `POST /api/login`. On success, stores `{username, role}` in the Pinia `authStore` and redirects to `/admin` if `role === 'ADMIN'`, otherwise to `/`. On 401, shows an "Invalid credentials" message. |
+| `/product/:id`       | **Toote leht** — encyclopedia content + price + Add to cart. "Lisa ostukorvi" calls `POST /api/carts/{cartId}/items`; if the user is not logged in, the SPA redirects to `/login?next=/product/:id`. Interactions shown as colored dots; the color comes from `color_code.color_code` for each `interaction_type_id`. |
+| `/cart`              | **Ostukorv** — cart contents fetched from `GET /api/users/{userId}/cart`, line-quantity edits via `PUT /api/cart-items/{id}`, remove via `DELETE`. Total computed client-side from line prices for fast UX. "Mine maksma" button → `/checkout`. |
+| `/checkout`          | **Kassa** — shipping form (first name, last name, address, courier dropdown from `GET /api/couriers`, "Collect from store" checkbox). Submits `POST /api/billings` then `POST /api/orders` with the returned `billing_id` and the current `cart_id`. |
+| `/confirmation/:id`  | **Tellimus kinnitatud** — fetches `GET /api/orders/{id}` and shows the order summary (items, total, billing address, status). |
+| `/contact`           | **Kontakt** — simple feedback form (first name, last name) that posts to `/api/contacts` for the logged-in user. Requires login (same redirect-to-`/login` pattern as cart). |
+| `/login`             | **Sisselogimine** — username + password form; submits to `POST /api/login`. On success, stores `{userId, username, role}` in the Pinia `authStore` and redirects to `?next=...` if present, otherwise `/admin` for `ADMIN` or `/` for `USER`. On 401, shows an "Invalid credentials" message. |
 
-There is **no `/register` route** — the `users` table is seeded once via `V8__seed_admins.sql`, not opened to the public.
+There is **no `/register` route** — the `user` table is seeded once via the init scripts (or a future `Vn__seed_users.sql` migration), not opened to the public.
 
 ### Auth store (Pinia)
 
-A `authStore` keyed on `{username, role}` (never a token):
+An `authStore` keyed on `{userId, username, role}` (never a token):
 
 - `login(username, password)` posts to `/api/login`, stores the response on success.
 - `logout()` clears the store (no backend call — there's no session to invalidate).
@@ -425,13 +559,15 @@ The Axios instance in `frontend/src/api.js` does **not** send an `Authorization`
 | Route                       | Purpose                                                |
 | --------------------------- | ------------------------------------------------------ |
 | `/admin`                    | Dashboard with links to catalog CRUD pages (route guard checks `auth.isAdmin`) |
-| `/admin/nutrients`          | List + create + edit + delete nutrients (name, description, category, price, in_stock, image upload) |
+| `/admin/nutrients`          | List + create + edit + delete nutrients (name, description, category, price, stock_quantity, image upload — supports many images per nutrient) |
 | `/admin/categories`         | List + create + edit + delete categories |
 | `/admin/properties`         | List + create + edit + delete educational properties (with type filter: FN/AM/AF/DS) |
 | `/admin/nutrient-properties`| Link/unlink properties to nutrients; set `effect_type` for AF rows |
-| `/admin/nutrient-interactions` | Create/edit `nutrient_interactions` rows (Nutrient → Related to → color_codes type, description) |
+| `/admin/nutrient-interactions` | Create/edit `nutrient_interaction` rows (Nutrient → Related to → color_code type, description) |
 | `/admin/color-codes`        | Edit interaction-type labels + colors (rarely used after seed) |
-| `/admin/orders`             | List orders + change status (depends on the commerce migration) |
+| `/admin/couriers`           | Edit courier rows (name, type code, api_key, endpoint_url). Rarely used after seed. |
+| `/admin/orders`             | List orders + change status (`P` → `A` → `S`; or `C` to cancel). Shows joined billing + items per row. |
+| `/admin/contacts`           | List feedback submissions from the `contact` table. |
 
 The route guards `meta: { requiresAdmin: true }` check `auth.isAdmin` and redirect to `/login` if the user isn't an admin. **This is purely client-side** — anyone bypassing the SPA (typing `/api/admin/**` directly into `curl`) can still write. See §6.
 
@@ -439,29 +575,35 @@ The route guards `meta: { requiresAdmin: true }` check `auth.isAdmin` and redire
 
 Fixed-value fields use Vue `<select>` dropdowns rather than free-text inputs:
 
-- `effect_type` in `nutrient_properties` → dropdown with three options: `ENHANCE` / `INHIBIT` / `NEUTRAL`. The dropdown only appears when the linked property's `type` is `AF` (absorption factor); for other property kinds the row is created with `effect_type = 'NEUTRAL'` and the field is hidden.
-- `interaction_type_id` in `nutrient_interactions` → dropdown populated from `GET /api/color-codes`.
-- `properties.type` → dropdown of the agreed codes (FN/AM/AF/DS), set at row creation time.
-- `orders.status` (admin-only, once orders ship) → dropdown: `PENDING` / `PAID` / `SHIPPED` / `CANCELLED`.
+- `effect_type` in `nutrient_property` → dropdown with two options: `ENHANCE` / `INHIBIT`. The dropdown only appears when the linked property's `type` is `AF` (absorption factor); for other property kinds the field is hidden and the column is left `NULL`.
+- `interaction_type_id` in `nutrient_interaction` → dropdown populated from `GET /api/color-codes`.
+- `property.type` → dropdown of the agreed codes (FN/AM/AF/DS), set at row creation time.
+- `order.status` (admin-only) → dropdown showing labels `PENDING` / `PAID` / `SHIPPED` / `CANCELLED`, persisting the `P` / `A` / `S` / `C` code. The mapping lives in a single `frontend/src/lookups/orderStatus.js` constant so the labels and codes stay in lockstep.
+- `courier_id` in the checkout billing form → dropdown populated from `GET /api/couriers`.
+- `courier.type` (admin form) → dropdown of the agreed CHAR(1) codes (set at seed time, e.g. `P` parcel-locker / `H` home / `S` in-store).
 
-This eliminates typo and casing inconsistencies at the UI level. The DB `CHECK` constraints are defense in depth.
+This eliminates typo and casing inconsistencies at the UI level. The DB `CHECK` constraints (where present) are defense in depth.
 
 ### Cart state (Pinia)
 
-A single `cartStore` with:
+A single `cartStore` that mirrors the server-side cart:
 
-- `items: { nutrientId, name, unitPrice, imageUrl, quantity }[]`
-- `addItem(nutrient)`, `removeItem(nutrientId)`, `setQuantity(nutrientId, qty)`, `clear()`
-- Computed `totalAmount`
-- **A watcher persists `items` to `localStorage` on every change and the store rehydrates on app boot.** Today's `cart.js` has neither — needs fixing.
+- `cartId: number | null` — set after the first fetch / lazy-create.
+- `items: { id, nutrientId, name, price, imageUrl, quantity }[]` — `id` is the `cart_item.id`, needed for `PUT` / `DELETE`.
+- `fetch(userId)` — `GET /api/users/{userId}/cart`, populates the store.
+- `addItem(nutrient)` — `POST /api/carts/{cartId}/items` then re-fetch (or merge the response).
+- `updateQuantity(itemId, qty)` — `PUT /api/cart-items/{id}`.
+- `removeItem(itemId)` — `DELETE /api/cart-items/{id}`.
+- `clear()` — `DELETE /api/carts/{cartId}/items`; also called on logout.
+- Computed `totalAmount` — summed locally from `items[].price * items[].quantity`.
 
-Cart never touches the backend until `POST /api/orders` is called (future).
+The store **does not** persist to `localStorage` in Rev. 4.1 — the source of truth is the DB. The only thing kept in `localStorage` is the auth store, so on page reload the SPA can immediately re-fetch the cart for the known `userId`.
 
 ## 9. Repository Structure
 
 **GitHub repository:** [`github.com/madmadis/nutrionista`](https://github.com/madmadis/nutrionista). Single monorepo with two top-level project folders.
 
-### Actual layout (Rev. 4)
+### Actual layout (Rev. 4.1)
 
 ```
 nutrionista/
@@ -490,14 +632,18 @@ nutrionista/
 └── docs/
     ├── database/
     │   ├── 1_reset_database.sql
-    │   ├── 2_create.sql                      ← canonical schema (Rev. 4 singular tables)
+    │   ├── 2_create.sql                      ← Rev. 4 9-table schema; needs regeneration to match v2
     │   └── 3_import.sql                      ← seed data (currently empty)
-    ├── madis/
-    │   ├── 2026-05-06-nutrionista-design_REV3-2.md   ← this file (despite the name, content is Rev. 4)
-    │   ├── nutrionista-mockup.html                   ← Balsamiq HTML export
-    │   ├── Nutrionista balsamiq.pdf                  ← Balsamiq source export
-    │   └── nutrionista_2026-05-14_09_09.xml          ← Redgate DB model (lags Rev. 4)
-    └── vue-komponendi-struktuur.md                   ← Vue component conventions (Estonian)
+    ├── 2026-05-06-nutrionista-design_REV4.1.md       ← this file
+    ├── nutrionista_data_model_v2.xml                 ← Redgate DB model — CANONICAL (Rev. 4.1)
+    ├── nutrionista_data_model_v2.pdf                 ← rendered ERD for the v2 model
+    ├── Nutrionista balsamiq.pdf                      ← Balsamiq source export
+    ├── vue-komponendi-struktuur.md                   ← Vue component conventions (Estonian)
+    └── madis/
+        ├── nutrionista-mockup.html                   ← Balsamiq HTML export
+        ├── Nutrionista balsamiq-analysis.md
+        ├── Nutrionista balsamiq-navigation.md
+        └── nutrionista_2026-05-14_09_09.xml          ← Rev. 4 Redgate model — SUPERSEDED by v2
 ```
 
 - **Java base package:** `ee.nutrionista`
@@ -510,9 +656,10 @@ nutrionista/
 ```
 main (default, deployable)
   ├── design-docs                        ← documentation work
-  ├── feature/orders-api                 ← orders/order_items migration + endpoints
-  ├── feature/properties-schema          ← properties + nutrient_properties + nutrient_interactions
-  └── feature/admin-pages                ← admin CRUD UI
+  ├── feature/schema-v2                  ← regenerate 2_create.sql from v2 (16 tables, fix effect_type bug)
+  ├── feature/cart-and-checkout          ← server-side cart endpoints + checkout flow (billing + courier)
+  ├── feature/properties-schema          ← property + nutrient_property + nutrient_interaction CRUD
+  └── feature/admin-pages                ← admin CRUD UI (catalog, orders, contacts, couriers)
 ```
 
 - `main` — what gets deployed. PRs into `main` after at least one teammate review.
@@ -523,16 +670,18 @@ PR title format: `[area] description` — e.g. `[backend] orders endpoint`, `[fr
 
 ## 10. Database Schema & Seeding
 
-### Current workflow (Rev. 4): manual init scripts
+### Current workflow (Rev. 4.1): manual init scripts (v2 regeneration pending)
 
 The current setup is **deliberately simple** — three SQL scripts in `docs/database/` that each teammate runs by hand against their local PostgreSQL when the schema changes:
 
 ```
 docs/database/
 ├── 1_reset_database.sql   ← DROP SCHEMA nutrionista CASCADE; CREATE SCHEMA nutrionista; grants
-├── 2_create.sql           ← all 9 tables + FKs + CHECKs (canonical schema)
+├── 2_create.sql           ← target: all 16 tables + FKs + CHECKs from v2 (currently the Rev. 4 schema)
 └── 3_import.sql           ← seed data — currently empty, to be filled in
 ```
+
+The Rev. 4.1 first-task list (§12) calls for regenerating `2_create.sql` from `docs/nutrionista_data_model_v2.xml`. Until that's done, the SQL above does **not** match the spec — teammates running it locally will get the 9-table Rev. 4 schema, not the v2 16-table one.
 
 To (re)build a local database:
 
@@ -561,7 +710,7 @@ The manual-script workflow works, but only because the schema is small and the t
 
 The 3 of us each have our own PostgreSQL running on our own laptop. We all need:
 
-- The same 9 tables (+ `orders` / `order_items` once they're added)
+- The same 16 tables (per the v2 model)
 - The same columns and constraints
 - The same seed data
 
@@ -606,17 +755,23 @@ Flyway is a small tool that runs automatically when the Spring Boot app starts. 
 The format is **`V` + number + `__` (two underscores) + descriptive name + `.sql`**:
 
 ```
-V1__create_category.sql        ← runs first
-V2__create_nutrient_image.sql  ← must run before nutrient (nutrient.image_id references it)
-V3__create_nutrient.sql
+V1__create_category.sql              ← runs first
+V2__create_nutrient.sql              ← creates nutrient (no image_id column in v2)
+V3__create_nutrient_image.sql        ← back-pointer FK references nutrient.id
 V4__create_property.sql
-V5__create_nutrient_property.sql
+V5__create_nutrient_property.sql     ← includes effect_type column (fixes v2 XML bug)
 V6__create_color_code.sql
 V7__create_nutrient_interaction.sql
 V8__create_role.sql
 V9__create_user.sql
-... (further V<n> files for orders / order_items once they're added)
-V100__seed_data.sql            ← runs after all schema is in place
+V10__create_courier.sql
+V11__create_billing.sql              ← references courier
+V12__create_cart.sql                 ← references "user"
+V13__create_cart_item.sql            ← references cart + nutrient
+V14__create_order.sql                ← references billing
+V15__create_order_item.sql           ← references order + nutrient
+V16__create_contact.sql              ← references "user"
+V100__seed_data.sql                  ← runs after all schema is in place
 ```
 
 The number determines run order. The name after `__` is for humans. We use `V100` for the seed data so it's well after the schema files; the exact number doesn't matter as long as it's higher than the last schema migration.
@@ -671,40 +826,48 @@ The team is three students — **Rain**, **Kaili**, and **Madis** — collaborat
 
 The remaining work, grouped by area:
 
+**Schema alignment (do this first — everything else depends on it)**
+- Regenerate `docs/database/2_create.sql` from `docs/nutrionista_data_model_v2.xml`. Use Redgate's "Generate Script" feature, or hand-translate; the SQL block in §5 of this spec is the reference. Add the missing `effect_type VARCHAR(10)` column on `nutrient_property` so the `nutrient_property_effect_ck` constraint resolves.
+- Pick and document the agreed CHAR(1) codes for `order.status` (suggested: `P` PENDING, `A` PAID, `S` SHIPPED, `C` CANCELLED) and `courier.type` (suggested: `P` parcel-locker, `H` home, `S` in-store). Drop these into §5 and §8.
+- Fill `3_import.sql`: `role` rows (`ADMIN`, `USER`), `color_code` rows (`GOOD` = `#22c55e`, `NEUTRAL` = `#eab308`, `BAD` = `#ef4444`), `property.type` codes (FN/AM/AF/DS), at least one seeded `courier`, the team's admin users, and at least one regular `USER` for demoing the cart flow.
+
 **Foundation cleanup**
 - **DONE (Rev. 4)** — Backend is in the target layout: `backend/src/main/java/ee/nutrionista/`. The earlier `backend/category/src/demo/` nesting is gone.
-- **DONE (Rev. 4)** — Java base package is `ee.nutrionista` (note: the spec previously planned `com.nutrionista`; the team went with `ee.` to match the project's national/edu context). Gradle: `group=ee`, `rootProject.name=backend`.
-- **DONE (Rev. 4)** — Switched build tool from Maven (Spring Initializr default) to Gradle with the wrapper checked in.
-- **DONE** (commits `7530110`, `a93ed1b`) — Trim the backend auth code to the minimal login: deleted `AuthFilter`, `Session`, `SessionRepository`, `V6__create_sessions.sql`. Rewrote `AuthController` + `AuthService` to a single `POST /api/login` returning `{username, role}`. Dropped `LoginResponse.token`. **Kept** `jbcrypt` in `pom.xml` — it verifies the seeded BCrypt hashes. *(Note: the current backend codebase actually contains only `NutrionistaApplication`; revisit this and the frontend auth item together — see memory note `project-auth-misalignment`.)*
-- **N/A** — "Deleted cut-feature backend code: `BlogPost*`, `FaqItem*` entities/repos/controllers". These files never existed in the current backend skeleton; nothing to delete.
-- Delete the cut features' frontend: `BlogView`, `AdminBlogView`, `AdminFaqView`, `QuizView`, `WishlistView`, `OrderHistoryView`, `ContactView`, `ProfileView`, plus their router entries in `frontend/src/router/index.js`. `FaqView` stays as a static page (content typed in code, no DB).
-- Trim the frontend auth code to match the new minimal model: rewire `LoginView` to `POST /api/login`; rewire `stores/auth.js` to hold `{username, role}` from the response (no token); delete the bearer interceptor in `api.js` (no token to send). **Keep** the `meta: { requiresAdmin: true }` route guards — they now check `role === 'ADMIN'` client-side.
+- **DONE (Rev. 4)** — Java base package is `ee.nutrionista`. Gradle: `group=ee`, `rootProject.name=backend`.
+- **DONE (Rev. 4)** — Switched build tool from Maven to Gradle with the wrapper checked in.
+- Write the minimal-login backend: `AuthController` + `AuthService` + `POST /api/login` returning `{userId, username, role}`. `jbcrypt` on the classpath to verify seeded hashes.
+- Delete the cut features' frontend: `BlogView`, `AdminBlogView`, `AdminFaqView`, `QuizView`, `WishlistView`, `OrderHistoryView`, `ProfileView`, plus their router entries in `frontend/src/router/index.js`. `FaqView` stays as a static page (content typed in code, no DB). `ContactView` stays — feedback is now in scope (see "Feedback" below).
+- Write the frontend auth: `LoginView` posts to `POST /api/login`; `stores/auth.js` holds `{userId, username, role}`; `api.js` does not send an Authorization header. `meta: { requiresAdmin: true }` route guards check `role === 'ADMIN'` client-side.
 - Clean up: garbage files in `frontend/` (`a.price`, `b.price`, `n.category.id`, `{`), commit a top-level `.gitignore` covering `.idea/` and `node_modules/`, fix `frontend/README.md` reference to `src/services/`.
-- Resolve `frontend/package.json` duplicates if they ever come back (Rev. 4 cleanup already removed duplicate `@vitejs/plugin-vue` and `vite` entries). Cross-check `vite ^8.0.3` and `eslint ^10.1.0` pins — they're suspiciously high; if `npm install` fails, drop to the latest published versions.
-- Bring the Redgate Data Modeler diagram (`docs/madis/nutrionista_2026-05-14_09_09.xml`) back in sync with `2_create.sql` (singular tables, `role` lookup, nullable `nutrient.image_id`).
+- Resolve `frontend/package.json` duplicates if they ever come back. Cross-check `vite ^8.0.3` and `eslint ^10.1.0` pins — they're suspiciously high; if `npm install` fails, drop to the latest published versions.
+- Retire / archive the Rev. 4 Redgate file `docs/madis/nutrionista_2026-05-14_09_09.xml`; the v2 model is canonical.
 
-**Backend catalog (per current schema)**
-- Move `docs/database/{1_reset_database, 2_create, 3_import}.sql` (or their Flyway-versioned equivalents) into a workflow the whole team uses consistently — either commit to manual psql runs or adopt Flyway as described in §10.
-- Seed data in `3_import.sql` (currently empty): at minimum the `role` rows (`ADMIN`, `USER`), the `color_code` rows (`GOOD` = `#22c55e` green, `NEUTRAL` = `#eab308` yellow, `BAD` = `#ef4444` red), the `property.type` codes (FN/AM/AF/DS), and the admin user(s) with bcrypt hashes.
-- Entities + repositories for `Category`, `Nutrient`, `Property`, `NutrientProperty`, `ColorCode`, `NutrientInteraction`, `Role`, `User`, `NutrientImage`. Java type names stay PascalCase + singular (already match table names).
-- DTOs + MapStruct mappers (MapStruct 1.6.3 is already on the classpath; `@Mapper(componentModel="spring")` is the default via `compileJava` options in `build.gradle`).
-- Public catalog endpoints (see §7): `/api/categories`, `/api/nutrients` (with `?category=`, `/search`, `/highlights`, `/{id}`), `/api/color-codes`, `/api/nutrient-images/{id}`.
-- Admin catalog endpoints (open, see §7): nutrients / categories / properties / nutrient-properties / nutrient-interactions / color-codes / nutrient-images CRUD.
+**Backend catalog**
+- Move `docs/database/{1_reset_database, 2_create, 3_import}.sql` into a workflow the whole team uses consistently — either commit to manual psql runs or adopt Flyway as described in §10.
+- Entities + repositories for the 16 tables: `Category`, `Nutrient`, `NutrientImage`, `Property`, `NutrientProperty`, `ColorCode`, `NutrientInteraction`, `Role`, `User`, `Courier`, `Billing`, `Cart`, `CartItem`, `Order` (entity name `OrderEntity` because `Order` is a JPA-reserved word in some setups), `OrderItem`, `Contact`. Java type names stay PascalCase + singular.
+- DTOs + MapStruct mappers (MapStruct 1.6.3 is already on the classpath; `@Mapper(componentModel="spring")`).
+- Public catalog endpoints (see §7): `/api/categories`, `/api/nutrients` (with `?category=`, `/search`, `/highlights`, `/{id}`, `/{id}/images`), `/api/color-codes`, `/api/couriers`, `/api/nutrient-images/{id}`.
+- Admin catalog endpoints (see §7): nutrients / categories / properties / nutrient-properties / nutrient-interactions / color-codes / nutrient-images / couriers CRUD.
 - Swagger UI verified at `/swagger-ui.html` (Springdoc 3.0.3 is on the classpath), CORS updated to include the Vercel domain.
 
-**Commerce (the next revision)**
-- Design `orders` + `order_items` tables (column types, FKs, CHECKs) and append them to `2_create.sql` (or as a Flyway migration if §10 has been switched over by then).
-- Entities + repositories + service.
-- `POST /api/orders` (creates order + items in one transaction, snapshots `unit_price`).
-- `GET /api/admin/orders` (list + `?status=` filter) and `PUT /api/admin/orders/{id}/status`.
-- Document the JSON body shape so the frontend checkout form lines up.
+**Commerce (cart + checkout) — modelled in v2; needs to be built**
+- Cart endpoints: `GET /api/users/{userId}/cart` (lazy-create), `POST /api/carts/{cartId}/items`, `PUT /api/cart-items/{id}`, `DELETE /api/cart-items/{id}`, `DELETE /api/carts/{cartId}/items`.
+- Billing endpoint: `POST /api/billings` (returns `{id}` for the order body).
+- Order endpoint: `POST /api/orders` — single transaction: validate cart contents, snapshot `nutrient.price` into `order_item.price`, compute `order_item.total_sum` and `order.total_sum`, set `status='P'`, delete the source `cart_item` rows. Return `{orderId, total_sum, status}`.
+- Admin order endpoints: `GET /api/admin/orders` (with `?status=` filter), `GET /api/admin/orders/{id}` (with billing + items joined), `PUT /api/admin/orders/{id}/status`.
+- Document the JSON body shapes in §7 so the frontend checkout form lines up — done above.
+
+**Feedback (contact form)**
+- `POST /api/contacts` + `GET /api/admin/contacts`. Decide whether to add a `message TEXT` column in a follow-up migration; the v2 schema as-is captures only `user_id`, `first_name`, `last_name`.
+- Frontend `ContactView` posts to `/api/contacts` for the logged-in user; admin `AdminContactsView` lists submissions.
 
 **Frontend**
-- Cart store: add the `localStorage` watcher + correct the field shape to `{ nutrientId, name, unitPrice, imageUrl, quantity }` (today's `cart.js` uses a generic `{ ...product, qty }` spread).
-- Public pages on live data: Home highlights grid (4 newest in-stock), Shop grid + filters, ProductDetail rendering the educational properties + colored-dot interactions panel.
-- Checkout page wired to `POST /api/orders` (once the endpoint exists), and a `/confirmation/:id` page.
-- Admin pages: Nutrients / Categories / Properties / Nutrient-properties / Interactions / Color codes / Orders.
-- Tailwind tokens: replace inline `bg-[#e6007a]` hex (currently in `NavBar.vue`, `FooterBar.vue`, etc.) with named tokens in `tailwind.config.js` — or commit to inline hex everywhere; pick one and apply it.
+- Cart store (Pinia): mirrors the server-side cart per §8 — `fetch / addItem / updateQuantity / removeItem / clear` all hit `/api/cart...`.
+- Public pages on live data: Home highlights grid (4 newest with `stock_quantity > 0`), Shop grid + category filter, ProductDetail rendering the educational properties + colored-dot interactions panel + (multiple) images from `/api/nutrients/{id}/images`.
+- Checkout page: two-step submit — `POST /api/billings` then `POST /api/orders` with the returned `billing_id` and the current `cart_id`. Then navigate to `/confirmation/:id`.
+- Admin pages: Nutrients / Categories / Properties / Nutrient-properties / Interactions / Color codes / Couriers / Orders / Contacts.
+- Status code lookup: `frontend/src/lookups/orderStatus.js` mapping `P`/`A`/`S`/`C` ↔ labels.
+- Tailwind tokens: replace inline `bg-[#e6007a]` hex (currently in `NavBar.vue`, `FooterBar.vue`, etc.) with named tokens in `tailwind.config.js`.
 - Component conventions (Options API only, `event-` event prefix, axios via `this.$axios`, data loading in `beforeMount`) are documented in `frontend/CLAUDE.md` and `docs/vue-komponendi-struktuur.md`.
 
 **Deployment**
@@ -715,19 +878,22 @@ The remaining work, grouped by area:
 ### Suggested 14-day rhythm (no person tags — claim what's free at standup)
 
 ```
-Day 1-3   Foundation cleanup (relocation, rename, drop auth code, delete cut features)
-Day 4-6   Catalog backend + Frontend public pages on live data
-Day 7-9   Commerce (orders/order_items) + admin pages
-Day 10-11 Deployment + end-to-end smoke test
+Day 1-2   Schema alignment: regenerate 2_create.sql, fix effect_type bug, seed lookups
+Day 3-5   Backend catalog (entities, repos, public endpoints) + Frontend public pages
+Day 6-8   Cart + checkout (backend endpoints, frontend store, checkout/confirmation pages)
+Day 9-10  Admin pages (catalog CRUD, orders, contacts) + feedback form wiring
+Day 11    Deployment + end-to-end smoke test
 Day 12-13 Polish, bug fixes, demo rehearsal — no new features
 Day 14    Demo
 ```
 
 ### Pair points (these always need a quick chat before someone starts)
 
-- **Order DTO shape** (before commerce work begins): whoever takes the backend endpoint and whoever takes the checkout form must agree on the JSON body.
+- **Order status codes** (before commerce work begins): confirm `P`/`A`/`S`/`C` (or other letters) so the backend service, the admin UI dropdown, and the seed all agree.
+- **Cart-to-order conversion semantics** (before checkout work begins): confirm that `POST /api/orders` deletes the source `cart_item` rows (and optionally the `cart` row) inside the same transaction. The frontend `cartStore` must refetch after.
 - **Interaction-dots data** (before the dot panel work begins): the JSON shape returned by `GET /api/nutrients/{id}` for interactions must match what `<InteractionDot>` consumes. `color_code.color_code` should arrive on the client without a hardcoded mapping.
 - **Property type codes** (before `3_import.sql` is filled in): the team picks the values for `property.type` (suggested: `FN`/`AM`/`AF`/`DS`) and writes them down here once decided.
+- **`contact.message` column** (before the feedback form is built): decide whether to add `message TEXT` in a v2.1 migration or accept the truncated schema.
 
 ### Branch strategy reminder (from §9)
 
@@ -735,26 +901,28 @@ All work on feature branches off `main`, merged via PR with one teammate review.
 
 ## 13. Demo Plan
 
-> **Status: on hold.** Project completion is not yet certain; revisit this section once the MVP is built. Until then, treat the flow below as a sketch — it assumes `orders` / `order_items` have shipped (steps 4-6) and may need rewriting once the actual feature set is known.
+> **Status: on hold.** Project completion is not yet certain; revisit this section once the MVP is built. The flow below assumes the v2 schema is live and the cart + checkout endpoints work end-to-end.
 
 - The application is deployed on Render (backend + Postgres) + Vercel (frontend); the demo URL is the Vercel domain.
 - The backend is kept warm by the cron-job.org keep-alive ping, so requests respond quickly during the presentation.
+- A seeded `USER`-role demo account is used for the public flow (cart requires login in v2); the admin accounts (`madis`, `kaili`, `rain`) are used for the admin flow.
 
 ### Demo flow (the critical path that must work)
 
 1. **Browse.** Open the home page; show the 4 newest in-stock nutrients ("Esiletõstetud Tooted"). Click "Tooted" → product grid; filter by category.
-2. **Read.** Click a product (e.g., "Iron"). Show the full educational content sourced from `properties` (functions, absorption methods, absorption factors with enhance/inhibit) and **the colored-dot interactions panel** (Vitamin C 🟢 Hea, Magnesium 🟡 Neutraalne, Calcium 🔴 Halb) sourced from `nutrient_interactions` + `color_codes` — proving that this is more than a generic store.
-3. **Add to cart.** From the detail page, click "Lisa ostukorvi". Click another product, add it. Open the cart (Ostukorv). Adjust a quantity. Total updates live (Pinia, persisted to `localStorage`).
-4. **Checkout.** Click "Mine maksma" — no login required (there is no login). Fill the shipping form. Submit. The backend creates an `orders` row + `order_items` rows (assumes the commerce migration has landed). Confirmation page shows the order number, items, total.
-5. **Admin.** Open `/admin/nutrients` directly (no login). Edit Iron's price or `in_stock` flag, save. Open `/admin/orders`, find the order just placed, change status `PENDING → PAID`.
-6. **Verify.** Reload the public product page → new price visible. The flow is end-to-end.
-7. **Swagger.** Open `/swagger-ui.html`. Show the API surface (catalog, orders, admin). Run a "Try it out" on `GET /api/nutrients/highlights` → live JSON response. Demonstrates that the backend is real, documented, and inspectable.
+2. **Read.** Click a product (e.g., "Iron"). Show the full educational content sourced from `property` (functions, absorption methods, absorption factors with enhance/inhibit) and **the colored-dot interactions panel** (Vitamin C 🟢 Hea, Magnesium 🟡 Neutraalne, Calcium 🔴 Halb) sourced from `nutrient_interaction` + `color_code` — proving that this is more than a generic store.
+3. **Log in as a regular user.** Click "Sisselogimine", enter the seeded demo user, click submit. The auth pill in the NavBar shows the username.
+4. **Add to cart.** From the detail page, click "Lisa ostukorvi" → `POST /api/carts/{cartId}/items`. Click another product, add it. Open the cart (Ostukorv) — items load from `GET /api/users/{userId}/cart`. Adjust a quantity (`PUT /api/cart-items/{id}`). Total updates live.
+5. **Checkout.** Click "Mine maksma". Fill the shipping form (first name, last name, address, courier dropdown, "collect from store" checkbox). Submit. The SPA posts `/api/billings`, then `/api/orders` with the returned `billing_id` and the current `cart_id`. Confirmation page shows the order number, items, total, and the billing/courier chosen.
+6. **Admin.** Open a new tab, log in as Madis. Open `/admin/nutrients`. Edit Iron's price or `stock_quantity`, save. Open `/admin/orders`, find the order just placed, change status `P` (PENDING) → `A` (PAID). Open `/admin/contacts` to show the feedback inbox.
+7. **Verify.** Reload the public product page → new price visible. The flow is end-to-end.
+8. **Swagger.** Open `/swagger-ui.html`. Show the API surface (catalog, cart, orders, billing, admin). Run a "Try it out" on `GET /api/nutrients/highlights` → live JSON response. Demonstrates that the backend is real, documented, and inspectable.
 
 ### What to say, not show
 
-If anyone in Q&A asks **"how is the admin section protected?"**, answer honestly: it isn't, in the MVP. Explain that re-introducing auth is the obvious follow-up (the `users` table is already in place), but the team chose to spend the two weeks on the catalog depth and commerce flow rather than a security model that can't be meaningfully reviewed live.
+If anyone in Q&A asks **"how is the admin section protected?"**, answer honestly: it isn't, in the MVP. The login is purely a UI hint plus a row-ownership anchor for the `cart` / `contact` tables. Explain that re-introducing real auth is the obvious follow-up (the `user` table is already in place and the FKs from `cart` / `contact` are ready to be enforced server-side), but the team chose to spend the two weeks on the catalog depth and commerce flow rather than a security model that can't be meaningfully reviewed live.
 
-If the **vitamin quiz**, **personalized recommendations**, **wishlist**, **order history page**, or **product bundles** come up: acknowledge them as part of the longer-term vision (visible in the Balsamiq mockup) and explain that the team prioritized a working end-to-end commerce flow over breadth for the 2-week MVP. The schema and architecture are designed to extend for those features without breaking changes.
+If the **vitamin quiz**, **personalized recommendations**, **wishlist**, **order history page**, or **product bundles** come up: acknowledge them as part of the longer-term vision (visible in the Balsamiq mockup) and explain that the team prioritized a working end-to-end commerce flow over breadth for the 2-week MVP. The schema and architecture are designed to extend for those features without breaking changes — though order history specifically needs an `order.user_id` (or equivalent) migration before it's implementable.
 
 ### Explanatory: cron-job.org and the cold-start problem
 
@@ -814,17 +982,25 @@ The Balsamiq mockup at `docs/nutrionista-mockup.html` shows substantially more f
 | Feature | Reason for cut |
 |---|---|
 | **Vitamin quiz (Vitamiinitest)** + **personalized vitamin profile (Vitamiiniprofiil)** | Requires question/option/result tables, recommendation rules engine, profile UI. ~20–30 hours. |
-| **Wishlist (Soovikorv)** | Adds 1 table + 2 endpoints + 1 page for a feature that doesn't change the demo's wow factor. Doubly out of scope without auth. |
-| **Product bundles (Tootekomplektid)** | Requires `bundles` + `bundle_products` tables and bundle detail pages. |
-| **Order history page (Tellimuste ajalugu)** | Requires a per-user "my orders" listing — meaningless without login, which is out of scope. |
+| **Wishlist (Soovikorv)** | Adds 1 table + 2 endpoints + 1 page for a feature that doesn't change the demo's wow factor. |
+| **Product bundles (Tootekomplektid)** | Requires `bundles` + `bundle_products` tables and bundle detail pages. Not in the v2 schema. |
+| **Order history page (Tellimuste ajalugu)** | Requires a per-user "my orders" listing. The v2 `order` table has no `user_id` FK — order history needs a v2.1 migration before it's implementable. |
 | **Reorder reminders** | Requires scheduled job + reminder table + email/notification dispatch — fully separate subsystem. |
 | **Brand filter, Goal filter** in the shop | Requires `brands` + `product_goals` tables and many-to-many joins. Category filter alone is enough for the demo. |
 | **Blog (Blogi/Artiklid)** | Cut entirely from the data model. The frontend `/blog` route and `BlogView`/`AdminBlogView` still exist and need to be deleted in the §12 foundation cleanup. |
 | **FAQ (KKK)** | Cut from the data model. The frontend `/admin/faq` route and `AdminFaqView` still exist and need to be deleted in the §12 foundation cleanup. A static `FaqView` (content typed in code, no DB) is acceptable as a Day 12–13 stretch goal. |
-| **Contact / feedback form (Tagasiside & Kontakt)** | Cut. Show a static contact-info page only as a stretch. |
 | **Live chat** | Already labeled "tulevikus" (in the future) in the mockup. Cut. |
 | **Real payments** | The checkout collects shipping info only — no card capture, no payment provider. |
-| **Authentication & user accounts** | See §6. The `users` table stays in the schema for future use; no login/register pages, no admin role enforcement. |
+| **Real authentication enforcement** | See §6. The `user` / `role` tables and the login endpoint exist; the SPA uses them for role-gating and cart ownership. The backend does **not** verify the supplied `userId`. |
+
+### Back in scope in Rev. 4.1 (modelled in v2, was cut in Rev. 4)
+
+| Feature | Notes |
+|---|---|
+| **Contact / feedback form (Tagasiside & Kontakt)** | `contact (id, user_id, first_name, last_name)` exists in v2. Frontend `ContactView` + `POST /api/contacts` + admin inbox. The schema doesn't carry the message body yet — see §12 pair points. |
+| **Server-side cart** | `cart` + `cart_item` exist in v2; replaces the Rev. 4 browser-only design. |
+| **Multiple images per nutrient** | v2's back-pointer FK makes this trivial; UI may render only the first image for the MVP and ship the gallery later. |
+| **Configurable couriers** | `courier` table with `api_key` / `endpoint_url` enables a future real shipping integration. The MVP seeds one or two rows. |
 
 ### Cut from the original encyclopedia spec
 
@@ -833,23 +1009,26 @@ The Balsamiq mockup at `docs/nutrionista-mockup.html` shows substantially more f
 | **Foods + food-nutrient amounts** | Doubles content authoring work. |
 | **Recommended daily intake** | Not visible on the e-commerce product detail page in the current mockup. |
 | **Body systems and academic source citations** | Out of scope for the commerce focus. |
-| **Separate per-domain lookup tables** (functions, absorption_methods, absorption_factors, deficiency_symptoms) | Replaced by the generalized `properties` table + `type` discriminator per the XML schema. |
+| **Separate per-domain lookup tables** (functions, absorption_methods, absorption_factors, deficiency_symptoms) | Replaced by the generalized `property` table + `type` discriminator per the v2 schema. |
 
-### In scope but not yet modelled (no pre-assigned owner)
+### In scope, modelled in v2, not yet built (no pre-assigned owner)
 
 | Item | Status |
 |---|---|
-| `orders` + `order_items` tables, entities, schema scripts | First task after Rev. 4 freeze (2026-05-15) |
-| `POST /api/orders` endpoint | Depends on tables above |
-| Checkout page wired to a real backend | Depends on endpoint above |
-| `/confirmation/:id` page | Depends on endpoint above |
-| Backend relocation out of `backend/category/src/demo/` | **DONE in Rev. 4** — backend now lives at `backend/src/main/java/ee/nutrionista/` |
+| Regenerate `2_create.sql` from `nutrionista_data_model_v2.xml` (and fix the `effect_type` column bug) | Rev. 4.1 day-1 task |
+| Backend entities + repositories for the 16 v2 tables | Depends on schema regeneration |
+| Cart endpoints (`/api/users/{userId}/cart`, `/api/carts/{cartId}/items`, `/api/cart-items/{id}`) | New in Rev. 4.1 |
+| Checkout endpoints (`POST /api/billings`, `POST /api/orders`, `GET /api/orders/{id}`) | Tables exist in v2 |
+| Frontend `/cart`, `/checkout`, `/confirmation/:id`, `/contact` pages on live data | Depends on backend endpoints |
+| `/admin/orders`, `/admin/contacts`, `/admin/couriers` admin pages | Depends on admin endpoints |
 
-### Backlog-ready extensions (the schema already permits them)
+### Backlog-ready extensions (small additions on top of the v2 schema)
 
 If post-demo work continues, these features fit cleanly:
 
-- Re-add `sessions` + login → the `users` table already has the columns to support it.
-- Wishlist → add `wishlist_items (user_id, nutrient_id)` (5-minute migration once auth exists).
-- Order status workflow → `orders.status` becomes a CHECK-constrained string, easy to extend with `'REFUNDED'`, etc.
-- Per-user order history → the page just renders `GET /api/orders/me` once auth + user_id-on-orders are in place.
+- **Real auth enforcement** → add a Spring Security filter that resolves the request's user from a session cookie or JWT; the `cart.user_id` / `contact.user_id` FKs are already in place.
+- **Wishlist** → add `wishlist_item (user_id, nutrient_id)` (5-minute migration; the structure parallels `cart_item`).
+- **`order.user_id`** → migration to add the column + `ON DELETE SET NULL`; backfill is fine because pre-migration orders are anonymous-by-design. Unlocks "my orders" listings and per-user analytics.
+- **`order.status` CHECK constraint** → tighten the `CHAR(1)` column with `CHECK (status IN ('P','A','S','C'))` once the codes are frozen.
+- **`order.created_at` + `order.updated_at`** → useful for `/admin/orders` sorting.
+- **`contact.message TEXT`** → so the feedback form actually captures the user's message body.
