@@ -1,3 +1,26 @@
+INSERT INTO role (id, name)
+VALUES
+    (1, 'ADMIN'),
+    (2, 'USER');
+
+INSERT INTO color_code (id, name, color_code)
+VALUES
+    (1, 'GREEN',  '#00C853'),
+    (2, 'RED',    '#D50000'),
+    (3, 'YELLOW', '#FFD600');
+
+INSERT INTO "user" (id, username, password_hash, role_id)
+VALUES
+    (1, 'admin', '$2a$10$aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 1),
+    (2, 'jaan',  '$2a$10$bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb', 2),
+    (3, 'mari',  '$2a$10$ccccccccccccccccccccccccccccccccccccccccccccccccccccc', 2);
+
+INSERT INTO cart (id, user_id)
+VALUES
+    (1, 1),
+    (2, 2),
+    (3, 3);
+
 INSERT INTO category (id, name, description)
 VALUES
     (1, 'Rasvlahustuv', 'Lahustub rasvades'),
