@@ -133,12 +133,12 @@ CREATE TABLE nutrient_property (
 -- -------------------------------------------------------------
 CREATE TABLE "user" (
                         id            SERIAL          NOT NULL,
-                        username      VARCHAR(50)     NOT NULL,
+                        email         VARCHAR(50)     NOT NULL,
                         password_hash VARCHAR(60)     NOT NULL,
                         created_at    TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
                         role_id       INT             NOT NULL,
                         CONSTRAINT user_pk          PRIMARY KEY (id),
-                        CONSTRAINT user_username_uq UNIQUE (username),
+                        CONSTRAINT user_email_uq UNIQUE (email),
                         CONSTRAINT user_role_fk
                             FOREIGN KEY (role_id) REFERENCES role (id)
 );

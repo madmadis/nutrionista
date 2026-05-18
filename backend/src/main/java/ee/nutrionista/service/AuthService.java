@@ -18,18 +18,12 @@ public class AuthService {
     private final UserRepository userRepository;
 
     public LoginResponseDto login(LoginRequestDto request) {
-        User user = userRepository.findByUsername(request.getUsername())
+        User user = userRepository.findUserBy(request.getEmail(), request.getPassword())
                 .orElseThrow(() -> new BadCredentialsException(
                         INCORRECT_CREDENTIALS.getMessage(),
                         INCORRECT_CREDENTIALS.getErrorCode()));
 
-        if (!BCrypt.checkpw(request.getPassword(), user.getPasswordHash())) {
-            throw new BadCredentialsException(
-                    INCORRECT_CREDENTIALS.getMessage(),
-                    INCORRECT_CREDENTIALS.getErrorCode());
-        }
-
-        return new LoginResponseDto(user.getId(), user.getUsername(), user.getRole().getName());
+        return new LoginResponseDto(user.getId(), user.getRole().getName());
     }
 
 }

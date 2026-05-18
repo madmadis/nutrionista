@@ -81,6 +81,8 @@ Kogu sellest:
 
 Kui PDF lugemine annab ebaselge tulemuse mõne välja osas, küsi kasutajalt täpsustust enne jätkamist.
 
+**Mockup PNG** — kontrolli, et fail `docs/mock/pictures/<VaateNimi>.png` eksisteerib. See lisatakse taski faili päisesse visuaalse kontekstina (vt samm 7).
+
 ### 4. Loe andmebaasi skeem
 
 Loe fail: `docs/database/2_create.sql`
@@ -144,6 +146,10 @@ Kasuta järgmist struktuuri:
 **Kontroller:** `<KontrolleriNimi>.java`
 **Tüüp:** Backend
 **Staatus:** To Do
+
+## Mockup
+
+![<VaateNimi>](../../mock/pictures/<VaateNimi>.png)
 
 ## Kontekst
 
