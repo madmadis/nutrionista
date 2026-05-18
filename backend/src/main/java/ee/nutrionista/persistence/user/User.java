@@ -1,0 +1,36 @@
+package ee.nutrionista.persistence.user;
+
+import ee.nutrionista.persistence.role.Role;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+@Entity
+@Table(name = "\"user\"", schema = "nutrionista")
+public class User {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
+    private Long id;
+
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "role_id", nullable = false)
+    private Role role;
+
+    @Size(max = 50)
+    @NotNull
+    @Column(name = "email", nullable = false)
+    private String email;
+
+    @Size(max = 60)
+    @NotNull
+    @Column(name = "password_hash", nullable = false)
+    private String passwordHash;
+
+}

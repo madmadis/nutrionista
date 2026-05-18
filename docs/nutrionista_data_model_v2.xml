@@ -1369,7 +1369,7 @@
             <Properties/>
         </Reference>
         <Reference Id="r11">
-            <Name>carti_item_nutrient</Name>
+            <Name>cart_item_nutrient</Name>
             <Description></Description>
             <PKTable>t6</PKTable>
             <FKTable>t13</FKTable>
@@ -1388,7 +1388,7 @@
             <Properties/>
         </Reference>
         <Reference Id="r12">
-            <Name>carti_item_cart</Name>
+            <Name>cart_item_cart</Name>
             <Description></Description>
             <PKTable>t12</PKTable>
             <FKTable>t13</FKTable>
