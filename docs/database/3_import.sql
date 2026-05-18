@@ -1,3 +1,26 @@
+INSERT INTO role (id, name)
+VALUES
+    (1, 'ADMIN'),
+    (2, 'USER');
+
+INSERT INTO color_code (id, name, color_code)
+VALUES
+    (1, 'GREEN',  '#00C853'),
+    (2, 'RED',    '#D50000'),
+    (3, 'YELLOW', '#FFD600');
+
+INSERT INTO "user" (id, username, password_hash, role_id)
+VALUES
+    (1, 'admin', '$2a$10$aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 1),
+    (2, 'jaan',  '$2a$10$bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb', 2),
+    (3, 'mari',  '$2a$10$ccccccccccccccccccccccccccccccccccccccccccccccccccccc', 2);
+
+INSERT INTO cart (id, user_id)
+VALUES
+    (1, 1),
+    (2, 2),
+    (3, 3);
+
 INSERT INTO category (id, name, description)
 VALUES
     (1, 'Rasvlahustuv', 'Lahustub rasvades'),
@@ -312,6 +335,12 @@ VALUES
 -- ORDER 3
 (5, 3, 2, 14.50, 1, 14.50),
 (6, 3, 10, 8.95, 1, 8.95);
+
+INSERT INTO feedback (id, name, email, message)
+VALUES
+    (1, 'Mari Mets',    'mari.mets@gmail.com',    'Väga hea valik tooteid! Vitamiin D3 jõudis kätte kiiresti.'),
+    (2, 'Jaan Tamm',    'jaan.tamm@hot.ee',       'Magneesium aitas une kvaliteeti parandada. Soovitan!'),
+    (3, 'Kati Kask',    'kati.kask@mail.ee',      'Kas plaanite lisada ka oomega-3 tooteid? Oleks väga vajalik.');
 
 INSERT INTO nutrient_image (nutrient_id, image_data)
 VALUES
