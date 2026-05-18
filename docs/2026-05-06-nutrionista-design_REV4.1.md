@@ -44,7 +44,7 @@ The project is built by a 3-person student team. The primary success criteria ar
 | Database     | PostgreSQL                            | Render (free)     |
 | DB workflow  | Manual init scripts in `docs/database/` (`1_reset_database.sql` → `2_create.sql` → `3_import.sql`). Flyway is **not yet adopted** — see §10. | Run manually on each laptop |
 
-**No authentication library.** `jBCrypt` and Spring Security are deliberately omitted — see §6.
+**Passwords:** BCrypt via `jBCrypt 0.4` (already on the classpath). The full login flow is **TBD** — see §6.
 
 ## 4. Architecture
 
@@ -317,43 +317,15 @@ The flow at checkout is therefore: insert one `billing` row → take its id → 
 
 ## 6. Authentication
 
-**The MVP has no security enforcement, but it does have a UI-only login for role-gating *and* for owning cart / contact rows.**
+**Status: TBD.** Passwords are stored as BCrypt hashes using `jBCrypt 0.4` (already on the backend classpath). The full login flow — endpoint shape, token vs. tokenless, server-side enforcement, role-gating semantics — is **deferred** and will be designed in a follow-up revision.
 
-There is a single `POST /api/login` endpoint. It looks up `user.username`, BCrypt-checks the password against the seeded `password_hash`, and returns `{userId, username, role}`. The SPA stores this in a Pinia `authStore` (persisted to `localStorage`) and uses it for three things:
+What's fixed today:
 
-1. **Role-gating the admin UI** — `auth.isAdmin` (`role === 'ADMIN'`) drives the NavBar admin dropdown, the `/admin/*` route guards (`meta: { requiresAdmin: true }`), and the "Edit" / "Delete" buttons on the public catalog pages.
-2. **Owning the cart** — `cart.user_id` is NOT NULL, so any "Add to cart" click requires a logged-in user. The SPA redirects anonymous visitors to `/login` when they hit "Lisa ostukorvi".
-3. **Owning a contact submission** — same story for the feedback form: `contact.user_id` is NOT NULL.
+- **Password storage:** BCrypt via `jBCrypt 0.4`. Seeded passwords in `3_import.sql` are bcrypt hashes; new passwords go through `BCrypt.hashpw` on write and `BCrypt.checkpw` on verify.
+- **`user` + `role` tables exist** in the v2 schema and are seeded with the team's admin accounts (`madis` / `kaili` / `rain` as `ADMIN`) plus at least one `USER`-role demo account.
+- **`cart.user_id` and `contact.user_id` are NOT NULL** in v2 — these flows therefore *do* require some notion of "who's logged in" before they can be completed end-to-end. How that user identity is established (a client-supplied `userId`, a token, a session cookie, etc.) is part of the deferred design.
 
-That is the entire mechanism. There is no token, no session, no `Authorization` header, no server-side admin filter, no `register` endpoint, and no `logout` endpoint. **The role is a UI hint, not a security boundary**, and **the `userId` is a client-supplied parameter, not a verified identity** — anyone calling `POST /api/carts/{cartId}/items` with somebody else's `cartId` will succeed.
-
-### Concretely:
-
-- `POST /api/login` exists. Body: `{username, password}`. On success: `{userId, username, role}` (200). On mismatch: 401. No cookie set, no token returned.
-- The `user` table is seeded with the team's admin accounts (`madis` / `kaili` / `rain`, all role `ADMIN`) plus at least one `USER`-role demo account so the public cart flow is demonstrable. Passwords are bcrypt hashes set in the seed script.
-- `jbcrypt` stays on the backend classpath — `AuthService` uses it to verify the seeded hashes (`BCrypt.checkpw`).
-- `/api/**` endpoints (including `/api/admin/**` and `/api/cart`) are openly accessible. Anyone hitting them directly with `curl` succeeds regardless of role. The SPA's role-gate is cosmetic; the cart's user ownership is enforced only by the SPA passing the logged-in `userId`.
-- The Vue SPA maintains an `authStore` with `{userId, username, role}` but **no token**. The cart and order submissions identify the user only by the client-supplied `userId` in the request body.
-
-### Why this minimal model (and not full auth)
-
-This is a 2-week school project that will be torn down or rewritten after the demo. The two weeks are better spent on:
-
-1. Filling out the educational schema (`property`, `nutrient_property`, `nutrient_interaction`, `color_code`).
-2. Building the catalog + product detail experience that proves Nutrionista is more than a generic store.
-3. Wiring the commerce flow end-to-end against the already-modelled `order` / `order_item` / `billing` / `courier` tables.
-
-A real auth subsystem (sessions, password reset, CSRF awareness, admin-vs-user split, lockout policy, refresh tokens) is a meaningful amount of code and presents little to a class demo audience that cannot inspect the security model live. The minimal login keeps the demo's "log in as Madis → admin buttons appear" moment, plus the new "log in as a regular user → cart works" moment, without the dead-weight subsystem.
-
-### Risk acknowledgement
-
-- **Anyone hitting `/api/admin/**` with `curl` can edit your catalog**, change order status, or read contact submissions. The SPA's role-gate stops casual visitors who use the UI, not anyone who reads this spec. Do not seed real product data you care about; treat the demo content as throwaway.
-- **Cart and contact ownership is unverified.** Because the backend trusts whatever `userId` / `cartId` the client sends, a curious user can read/write another user's cart by guessing IDs. The SPA never exposes a way to do this; `curl` does.
-- **Future revisions can upgrade to real auth** without a schema change for `user`. The previous "users + sessions + BCrypt + custom filter" design (in the git history of this spec, before commit `a93ed1b`) is the reference implementation when that revision arrives. Wiring `cart`, `contact`, and (later) `order` to a server-verified user identity is the obvious follow-up.
-
-### `user` table retention rationale
-
-The v2 model keeps `user` and adds direct FKs from `cart` and `contact`. The seed (now in `3_import.sql` or its Flyway replacement) stays as the source of demo credentials. **Treat the `user` table as a credential store for the login UI + an ownership anchor for cart/contact, not as a security boundary** — the backend never asks "who is this request from?" beyond the explicit login call.
+> **Cross-section follow-up.** Other parts of this spec still describe an earlier auth model (a UI-only role hint, a `POST /api/login` returning `{userId, username, role}`, a Pinia `authStore`, route guards keyed on `auth.isAdmin`, etc.). Specifically: §7 (`POST /api/login` in the API surface), §8 (`/login` route + auth store), §12 (the "Write the minimal-login backend" task), §13 (the "Log in as a regular user" demo step), and §14 ("Real authentication enforcement" out-of-scope row). These references are kept for context but should be re-read as **placeholders until §6 is finalized**.
 
 ## 7. API Surface (high level)
 
@@ -613,7 +585,21 @@ nutrionista/
 │   ├── gradlew, gradlew.bat, gradle/wrapper/
 │   └── src/main/
 │       ├── java/ee/nutrionista/
-│       │   └── NutrionistaApplication.java   ← only file so far; controllers/entities/etc. TBD
+│       │   ├── NutrionistaApplication.java
+│       │   ├── controller/                   ← REST controllers, one sub-package per resource
+│       │   │   └── <resource>/               ← e.g. auth/, nutrient/, category/
+│       │   │       ├── dto/                  ← request + response DTOs
+│       │   │       └── SomeController.java
+│       │   ├── infrastructure/               ← global error handling
+│       │   │   ├── error/                    ← ApiError.java, ErrorResponse.java
+│       │   │   ├── exception/                ← custom exception classes
+│       │   │   └── RestExceptionHandler.java
+│       │   ├── persistence/                  ← JPA entities + repositories, one sub-package per resource
+│       │   │   └── <resource>/               ← e.g. role/, user/, nutrient/
+│       │   │       ├── Entity.java
+│       │   │       ├── EntityMapper.java
+│       │   │       └── EntityRepository.java
+│       │   └── service/                      ← business logic
 │       └── resources/
 │           ├── application.properties
 │           └── spy.properties                ← p6spy SQL logging config

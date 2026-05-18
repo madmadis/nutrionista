@@ -51,11 +51,12 @@ SQL skriptid käivitada järjest:
 
 | Osa | Tehnoloogia |
 |-----|-------------|
-| Backend | Spring Boot 4, Java 21, JPA, Lombok, MapStruct |
+| Backend | Spring Boot 4, Java 21, JPA, Bean Validation, Lombok, MapStruct, Springdoc OpenAPI, p6spy |
+| Ehitustööriist | Gradle (wrapper: `./gradlew bootRun`, `./gradlew build`) |
 | Frontend | Vue 3 (Options API), Pinia, Vue Router, Tailwind, Axios |
 | Andmebaas | PostgreSQL |
 | Paroolid | BCrypt (jbcrypt 0.4) |
 
 ## Keel
 
-Kogu dokumentatsioon (`CLAUDE.md`, `docs/`) peab olema **eestikeelne**.
+Kogu dokumentatsioon (`CLAUDE.md`, `docs/`) peab olema **eestikeelne**, välja arvatud disainispec (`docs/2026-05-06-nutrionista-design_REV4.1.md`), mis on ingliskeelne.
