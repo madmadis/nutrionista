@@ -9,8 +9,8 @@ export const useAuthStore = defineStore('auth', () => {
   const isAdmin = ref(localStorage.getItem('isAdmin') === 'true')
   const isLoggedIn = ref(!!token.value)
 
-  async function login(username, password) {
-    const res = await api.post('/login', { username, password })
+  async function login(email, password) {
+    const res = await api.post('/login', { email, password })
     token.value = res.data.token
     role.value = res.data.role
     isAdmin.value = res.data.role === 'ADMIN'
@@ -21,8 +21,8 @@ export const useAuthStore = defineStore('auth', () => {
     return res.data
   }
 
-  async function register(username, password) {
-    const res = await api.post('/register', { username, password })
+  async function register(email, password) {
+    const res = await api.post('/register', { email, password })
     token.value = res.data.token
     role.value = res.data.role
     isAdmin.value = res.data.role === 'ADMIN'

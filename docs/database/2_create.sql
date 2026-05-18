@@ -11,7 +11,7 @@ SET search_path TO nutrionista;
 CREATE TABLE category (
                           id          SERIAL          NOT NULL,
                           name        VARCHAR(100)    NOT NULL,
-                          description TEXT,
+                          description VARCHAR(500),
                           CONSTRAINT category_pk      PRIMARY KEY (id),
                           CONSTRAINT category_name_uq UNIQUE (name)
 );
@@ -68,7 +68,7 @@ CREATE TABLE nutrient (
                           name           VARCHAR(100)     NOT NULL,
                           description    VARCHAR(500),
                           category_id    INT              NOT NULL,
-                          price          NUMERIC(8,2)     NOT NULL DEFAULT 0,
+                          price          NUMERIC(8,2)     NOT NULL,
                           stock_quantity INT              NOT NULL,
                           created_at     TIMESTAMP        NOT NULL DEFAULT CURRENT_TIMESTAMP,
                           updated_at     TIMESTAMP        NOT NULL DEFAULT CURRENT_TIMESTAMP,
