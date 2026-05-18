@@ -22,8 +22,11 @@
               <label class="block text-sm font-bold text-[#555555] mb-1">Sõnum:</label>
               <textarea v-model="form.message" placeholder="Sisesta oma tagasiside siia..." class="border border-[#dddddd] rounded-lg px-4 py-2.5 w-full h-32"></textarea>
             </div>
-            <button class="bg-[#e6007a] text-white px-6 py-3 rounded-lg shadow hover:opacity-90 w-full font-bold">
-              Saada tagasiside
+            <p v-if="successMessage" class="text-green-600 font-bold text-sm">{{ successMessage }}</p>
+            <p v-if="errorMessage" class="text-red-500 font-bold text-sm">{{ errorMessage }}</p>
+            <button @click="submitFeedback" :disabled="loading"
+              class="bg-[#e6007a] text-white px-6 py-3 rounded-lg shadow hover:opacity-90 w-full font-bold disabled:opacity-50">
+              {{ loading ? 'Saatmine...' : 'Saada tagasiside' }}
             </button>
           </div>
         </div>
@@ -71,7 +74,28 @@ export default {
   data() {
     return {
       form: { name: '', email: '', message: '' },
+      loading: false,
+      successMessage: '',
+      errorMessage: '',
     }
+  },
+  methods: {
+    submitFeedback() {
+      this.successMessage = ''
+      this.errorMessage = ''
+      this.loading = true
+      this.$axios.post('/api/feedback', this.form)
+        .then(() => this.handleSubmitResponse())
+        .catch((error) => this.handleSubmitError(error))
+        .finally(() => { this.loading = false })
+    },
+    handleSubmitResponse() {
+      this.successMessage = 'Tagasiside edukalt saadetud!'
+      this.form = { name: '', email: '', message: '' }
+    },
+    handleSubmitError() {
+      this.errorMessage = 'Saatmine ebaõnnestus. Proovi uuesti.'
+    },
   },
 }
 </script>
