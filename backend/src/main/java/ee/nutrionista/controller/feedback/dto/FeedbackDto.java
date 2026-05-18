@@ -1,4 +1,4 @@
-package ee.nutrionista.feedback;
+package ee.nutrionista.controller.feedback.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

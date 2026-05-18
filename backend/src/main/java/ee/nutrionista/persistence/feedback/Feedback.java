@@ -1,4 +1,4 @@
-package ee.nutrionista.feedback;
+package ee.nutrionista.persistence.feedback;
 
 import jakarta.persistence.*;
 import lombok.Data;

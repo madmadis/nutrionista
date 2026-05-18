@@ -1,4 +1,4 @@
-package ee.nutrionista.feedback;
+package ee.nutrionista.persistence.feedback;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
