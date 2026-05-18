@@ -9,11 +9,17 @@ VALUES
     (2, 'RED',    '#D50000'),
     (3, 'YELLOW', '#FFD600');
 
-INSERT INTO "user" (id, username, password_hash, role_id)
+INSERT INTO "user" (id, email, password_hash, role_id)
 VALUES
-    (1, 'admin', '$2a$10$aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 1),
-    (2, 'jaan',  '$2a$10$bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb', 2),
-    (3, 'mari',  '$2a$10$ccccccccccccccccccccccccccccccccccccccccccccccccccccc', 2);
+    (1, 'admin@nutrionista.ee',   'admin123', 1),
+    (2, 'jaan.tamm@mail.ee',      'jaan123', 2),
+    (3, 'mari.mets@gmail.com',    'mari123', 2);
+
+INSERT INTO contact (id, user_id, first_name, last_name)
+VALUES
+    (1, 1, 'Admin',  'Nutrionista'),
+    (2, 2, 'Jaan',   'Tamm'),
+    (3, 3, 'Mari',   'Mets');
 
 INSERT INTO cart (id, user_id)
 VALUES
