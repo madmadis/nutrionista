@@ -1,165 +1,228 @@
--- Created by Redgate Data Modeler (https://datamodeler.redgate-platform.com)
--- Last modification date: 2026-05-15 12:38:04.223
+-- =============================================================
+-- Full DDL – Nutrient Shop Database
+-- Engine: PostgreSQL 18
+-- =============================================================
 
--- tables
--- Table: category
+-- -------------------------------------------------------------
+-- 1. category
+-- -------------------------------------------------------------
 CREATE TABLE category (
-                          id serial  NOT NULL,
-                          name varchar(100)  NOT NULL,
-                          description text  NULL,
-                          CONSTRAINT category_name_uq UNIQUE (name) NOT DEFERRABLE  INITIALLY IMMEDIATE,
-                          CONSTRAINT category_pk PRIMARY KEY (id)
+                          id          SERIAL          NOT NULL,
+                          name        VARCHAR(100)    NOT NULL,
+                          description TEXT,
+                          CONSTRAINT category_pk      PRIMARY KEY (id),
+                          CONSTRAINT category_name_uq UNIQUE (name)
 );
 
--- Table: color_code
+-- -------------------------------------------------------------
+-- 2. color_code
+-- -------------------------------------------------------------
 CREATE TABLE color_code (
-                            id serial  NOT NULL,
-                            name varchar(10)  NOT NULL,
-                            color_code varchar(10)  NOT NULL,
-                            CONSTRAINT color_code_name_uq UNIQUE (name) NOT DEFERRABLE  INITIALLY IMMEDIATE,
-                            CONSTRAINT color_code_pk PRIMARY KEY (id)
+                            id         SERIAL         NOT NULL,
+                            name       VARCHAR(10)    NOT NULL,
+                            color_code VARCHAR(10)    NOT NULL,
+                            CONSTRAINT color_code_pk      PRIMARY KEY (id),
+                            CONSTRAINT color_code_name_uq UNIQUE (name)
 );
 
--- Table: nutrient_image
--- The link to the owning nutrient is held by nutrient.image_id; no back-pointer here.
-CREATE TABLE nutrient_image (
-                                id serial  NOT NULL,
-                                image_data bytea  NOT NULL,
-                                CONSTRAINT nutrient_image_pk PRIMARY KEY (id)
-);
-
--- Table: nutrient_interaction
-CREATE TABLE nutrient_interaction (
-                                      id serial  NOT NULL,
-                                      nutrient_id int  NOT NULL,
-                                      related_nutrient_id int  NOT NULL,
-                                      interaction_type_id int  NOT NULL,
-                                      description varchar(200)  NULL,
-                                      CONSTRAINT nutrient_interaction_self_ck CHECK (( nutrient_id <> related_nutrient_id )) NOT DEFERRABLE INITIALLY IMMEDIATE,
-                                      CONSTRAINT nutrient_interaction_pk PRIMARY KEY (id)
-);
-
--- Table: nutrient_property
-CREATE TABLE nutrient_property (
-                                   id serial  NOT NULL,
-                                   nutrient_id int  NOT NULL,
-                                   property_id int  NOT NULL,
-                                   effect_type varchar(10)  NULL,
-                                   CONSTRAINT nutrient_property_effect_ck CHECK (( effect_type IN ( 'ENHANCE' , 'INHIBIT' ) )) NOT DEFERRABLE INITIALLY IMMEDIATE,
-                                   CONSTRAINT nutrient_property_pk PRIMARY KEY (id)
-);
-
--- Table: nutrient
-CREATE TABLE nutrient (
-                          id serial  NOT NULL,
-                          name varchar(100)  NOT NULL,
-                          description varchar(500)  NULL,
-                          category_id int  NOT NULL,
-                          price numeric(8,2)  NOT NULL DEFAULT 0,
-                          in_stock boolean  NOT NULL DEFAULT true,
-                          created_at timestamp  NOT NULL DEFAULT current_timestamp,
-                          updated_at timestamp  NOT NULL DEFAULT current_timestamp,
-                          image_id int  NULL,
-                          CONSTRAINT nutrient_name_uq UNIQUE (name) NOT DEFERRABLE  INITIALLY IMMEDIATE,
-                          CONSTRAINT nutrient_price_ck CHECK (( price >= 0 )) NOT DEFERRABLE INITIALLY IMMEDIATE,
-                          CONSTRAINT nutrient_pk PRIMARY KEY (id)
-);
-
--- Table: property
+-- -------------------------------------------------------------
+-- 3. property
+-- -------------------------------------------------------------
 CREATE TABLE property (
-                          id serial  NOT NULL,
-                          type varchar(3)  NOT NULL,
-                          name varchar(150)  NOT NULL,
-                          description varchar(150)  NULL,
+                          id          SERIAL          NOT NULL,
+                          type        VARCHAR(3)      NOT NULL,
+                          name        VARCHAR(150)    NOT NULL,
+                          description VARCHAR(150),
                           CONSTRAINT property_pk PRIMARY KEY (id)
 );
 
--- Table: role
+-- -------------------------------------------------------------
+-- 4. role
+-- -------------------------------------------------------------
 CREATE TABLE role (
-                      id serial  NOT NULL,
-                      name varchar(10)  NOT NULL,
-                      CONSTRAINT role_name_uq UNIQUE (name) NOT DEFERRABLE  INITIALLY IMMEDIATE,
-                      CONSTRAINT role_pk PRIMARY KEY (id)
+                      id   SERIAL       NOT NULL,
+                      name VARCHAR(10)  NOT NULL,
+                      CONSTRAINT role_pk      PRIMARY KEY (id),
+                      CONSTRAINT role_name_uq UNIQUE (name)
 );
 
--- Table: "user"  ("user" on PostgreSQL-is reserveeritud sõna)
+-- -------------------------------------------------------------
+-- 5. courier
+-- -------------------------------------------------------------
+CREATE TABLE courier (
+                         id           SERIAL          NOT NULL,
+                         name         VARCHAR(255)    NOT NULL,
+                         type         CHAR(1)         NOT NULL,
+                         api_key      VARCHAR(255),
+                         endpoint_url VARCHAR(255),
+                         CONSTRAINT courier_pk PRIMARY KEY (id)
+);
+
+-- -------------------------------------------------------------
+-- 6. nutrient
+-- -------------------------------------------------------------
+CREATE TABLE nutrient (
+                          id             SERIAL           NOT NULL,
+                          name           VARCHAR(100)     NOT NULL,
+                          description    VARCHAR(500),
+                          category_id    INT              NOT NULL,
+                          price          NUMERIC(8,2)     NOT NULL DEFAULT 0,
+                          stock_quantity INT              NOT NULL,
+                          created_at     TIMESTAMP        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                          updated_at     TIMESTAMP        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                          CONSTRAINT nutrient_pk       PRIMARY KEY (id),
+                          CONSTRAINT nutrient_name_uq  UNIQUE (name),
+                          CONSTRAINT nutrient_price_ck CHECK (price >= 0),
+                          CONSTRAINT nutrient_category_fk
+                              FOREIGN KEY (category_id) REFERENCES category (id)
+);
+
+-- -------------------------------------------------------------
+-- 7. nutrient_image
+-- -------------------------------------------------------------
+CREATE TABLE nutrient_image (
+                                id          SERIAL  NOT NULL,
+                                nutrient_id INT     NOT NULL,
+                                image_data  BYTEA   NOT NULL,
+                                CONSTRAINT nutrient_image_pk PRIMARY KEY (id),
+                                CONSTRAINT nutrient_image_nutrient_fk
+                                    FOREIGN KEY (nutrient_id) REFERENCES nutrient (id)
+                                        ON DELETE CASCADE
+);
+
+-- -------------------------------------------------------------
+-- 8. nutrient_interaction
+-- -------------------------------------------------------------
+CREATE TABLE nutrient_interaction (
+                                      id                  SERIAL          NOT NULL,
+                                      nutrient_id         INT             NOT NULL,
+                                      related_nutrient_id INT             NOT NULL,
+                                      interaction_type_id INT             NOT NULL,
+                                      description         VARCHAR(200),
+                                      CONSTRAINT nutrient_interaction_pk      PRIMARY KEY (id),
+                                      CONSTRAINT nutrient_interaction_self_ck CHECK (nutrient_id <> related_nutrient_id),
+                                      CONSTRAINT nutrient_interaction_nutrient_fk
+                                          FOREIGN KEY (nutrient_id) REFERENCES nutrient (id)
+                                              ON DELETE CASCADE,
+                                      CONSTRAINT nutrient_interaction_related_nutrient_fk
+                                          FOREIGN KEY (related_nutrient_id) REFERENCES nutrient (id)
+                                              ON DELETE CASCADE,
+                                      CONSTRAINT nutrient_interaction_color_code_fk
+                                          FOREIGN KEY (interaction_type_id) REFERENCES color_code (id)
+);
+
+-- -------------------------------------------------------------
+-- 9. nutrient_property
+-- -------------------------------------------------------------
+CREATE TABLE nutrient_property (
+                                   id          SERIAL       NOT NULL,
+                                   nutrient_id INT          NOT NULL,
+                                   property_id INT          NOT NULL,
+                                   effect_type VARCHAR(10)  NULL,
+                                   CONSTRAINT nutrient_property_pk        PRIMARY KEY (id),
+                                   CONSTRAINT nutrient_property_effect_ck CHECK (effect_type IN ('ENHANCE', 'INHIBIT')),
+                                   CONSTRAINT nutrient_property_nutrient_fk
+                                       FOREIGN KEY (nutrient_id) REFERENCES nutrient (id)
+                                           ON DELETE CASCADE,
+                                   CONSTRAINT nutrient_property_property_fk
+                                       FOREIGN KEY (property_id) REFERENCES property (id)
+);
+
+-- -------------------------------------------------------------
+-- 10. user
+-- -------------------------------------------------------------
 CREATE TABLE "user" (
-                        id serial  NOT NULL,
-                        username varchar(50)  NOT NULL,
-                        password_hash varchar(60)  NOT NULL,
-                        created_at timestamp  NOT NULL DEFAULT current_timestamp,
-                        role_id int  NOT NULL,
-                        CONSTRAINT user_username_uq UNIQUE (username) NOT DEFERRABLE  INITIALLY IMMEDIATE,
-                        CONSTRAINT user_pk PRIMARY KEY (id)
+                        id            SERIAL          NOT NULL,
+                        username      VARCHAR(50)     NOT NULL,
+                        password_hash VARCHAR(60)     NOT NULL,
+                        created_at    TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        role_id       INT             NOT NULL,
+                        CONSTRAINT user_pk          PRIMARY KEY (id),
+                        CONSTRAINT user_username_uq UNIQUE (username),
+                        CONSTRAINT user_role_fk
+                            FOREIGN KEY (role_id) REFERENCES role (id)
 );
 
--- foreign keys
--- Reference: nutrient_category (table: nutrient)
-ALTER TABLE nutrient ADD CONSTRAINT nutrient_category_fk
-    FOREIGN KEY (category_id)
-        REFERENCES category (id)
-        NOT DEFERRABLE
-            INITIALLY IMMEDIATE
-;
+-- -------------------------------------------------------------
+-- 11. contact
+-- -------------------------------------------------------------
+CREATE TABLE contact (
+                         id         SERIAL          NOT NULL,
+                         user_id    INT             NOT NULL,
+                         first_name VARCHAR(255)    NOT NULL,
+                         last_name  VARCHAR(255)    NOT NULL,
+                         CONSTRAINT contact_pk PRIMARY KEY (id),
+                         CONSTRAINT contact_user
+                             FOREIGN KEY (user_id) REFERENCES "user" (id)
+);
 
--- Reference: nutrient_image (table: nutrient)
-ALTER TABLE nutrient ADD CONSTRAINT nutrient_image_fk
-    FOREIGN KEY (image_id)
-        REFERENCES nutrient_image (id)
-        ON DELETE SET NULL
-        NOT DEFERRABLE
-            INITIALLY IMMEDIATE
-;
+-- -------------------------------------------------------------
+-- 12. cart
+-- -------------------------------------------------------------
+CREATE TABLE cart (
+                      id      SERIAL  NOT NULL,
+                      user_id INT     NOT NULL,
+                      CONSTRAINT cart_pk PRIMARY KEY (id),
+                      CONSTRAINT cart_user
+                          FOREIGN KEY (user_id) REFERENCES "user" (id)
+);
 
--- Reference: nutrient_interaction_nutrient (table: nutrient_interaction)
-ALTER TABLE nutrient_interaction ADD CONSTRAINT nutrient_interaction_nutrient_fk
-    FOREIGN KEY (nutrient_id)
-        REFERENCES nutrient (id)
-        ON DELETE CASCADE
-        NOT DEFERRABLE
-            INITIALLY IMMEDIATE
-;
+-- -------------------------------------------------------------
+-- 13. cart_item
+-- -------------------------------------------------------------
+CREATE TABLE cart_item (
+                           id          SERIAL  NOT NULL,
+                           nutrient_id INT     NOT NULL,
+                           cart_id     INT     NOT NULL,
+                           quantity    INT     NOT NULL,
+                           CONSTRAINT cart_item_pk PRIMARY KEY (id),
+                           CONSTRAINT cart_item_nutrient
+                               FOREIGN KEY (nutrient_id) REFERENCES nutrient (id),
+                           CONSTRAINT cart_item_cart
+                               FOREIGN KEY (cart_id) REFERENCES cart (id)
+);
 
--- Reference: nutrient_interaction_related_nutrient (table: nutrient_interaction)
-ALTER TABLE nutrient_interaction ADD CONSTRAINT nutrient_interaction_related_nutrient_fk
-    FOREIGN KEY (related_nutrient_id)
-        REFERENCES nutrient (id)
-        ON DELETE CASCADE
-        NOT DEFERRABLE
-            INITIALLY IMMEDIATE
-;
+-- -------------------------------------------------------------
+-- 14. billing
+-- -------------------------------------------------------------
+CREATE TABLE billing (
+                         id         SERIAL          NOT NULL,
+                         first_name VARCHAR(255)    NOT NULL,
+                         last_name  VARCHAR(255)    NOT NULL,
+                         address    VARCHAR(255)    NOT NULL,
+                         courier_id INT,
+                         CONSTRAINT billing_pk PRIMARY KEY (id),
+                         CONSTRAINT billing_courier
+                             FOREIGN KEY (courier_id) REFERENCES courier (id)
+);
 
--- Reference: nutrient_interaction_color_code (table: nutrient_interaction)
-ALTER TABLE nutrient_interaction ADD CONSTRAINT nutrient_interaction_color_code_fk
-    FOREIGN KEY (interaction_type_id)
-        REFERENCES color_code (id)
-        NOT DEFERRABLE
-            INITIALLY IMMEDIATE
-;
+-- -------------------------------------------------------------
+-- 15. order
+-- -------------------------------------------------------------
+CREATE TABLE "order" (
+                         id                 SERIAL          NOT NULL,
+                         billing_id         INT             NOT NULL,
+                         total_sum          NUMERIC(8,2)    NOT NULL,
+                         status             CHAR(1)         NOT NULL,
+                         collect_from_store BOOLEAN         NOT NULL,
+                         CONSTRAINT order_pk PRIMARY KEY (id),
+                         CONSTRAINT order_billing
+                             FOREIGN KEY (billing_id) REFERENCES billing (id)
+);
 
--- Reference: nutrient_property_nutrient (table: nutrient_property)
-ALTER TABLE nutrient_property ADD CONSTRAINT nutrient_property_nutrient_fk
-    FOREIGN KEY (nutrient_id)
-        REFERENCES nutrient (id)
-        ON DELETE CASCADE
-        NOT DEFERRABLE
-            INITIALLY IMMEDIATE
-;
-
--- Reference: nutrient_property_property (table: nutrient_property)
-ALTER TABLE nutrient_property ADD CONSTRAINT nutrient_property_property_fk
-    FOREIGN KEY (property_id)
-        REFERENCES property (id)
-        NOT DEFERRABLE
-            INITIALLY IMMEDIATE
-;
-
--- Reference: user_role (table: "user")
-ALTER TABLE "user" ADD CONSTRAINT user_role_fk
-    FOREIGN KEY (role_id)
-        REFERENCES role (id)
-        NOT DEFERRABLE
-            INITIALLY IMMEDIATE
-;
-
--- End of file.
+-- -------------------------------------------------------------
+-- 16. order_item
+-- -------------------------------------------------------------
+CREATE TABLE order_item (
+                            id          SERIAL          NOT NULL,
+                            order_id    INT             NOT NULL,
+                            nutrient_id INT             NOT NULL,
+                            price       NUMERIC(8,2)    NOT NULL,
+                            quantity    INT             NOT NULL,
+                            total_sum   NUMERIC(8,2)    NOT NULL,
+                            CONSTRAINT order_item_pk PRIMARY KEY (id),
+                            CONSTRAINT order_item_order
+                                FOREIGN KEY (order_id) REFERENCES "order" (id),
+                            CONSTRAINT order_item_nutrient
+                                FOREIGN KEY (nutrient_id) REFERENCES nutrient (id)
+);
