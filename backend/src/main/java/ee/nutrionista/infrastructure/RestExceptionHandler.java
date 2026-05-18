@@ -2,6 +2,7 @@ package ee.nutrionista.infrastructure;
 
 import ee.nutrionista.infrastructure.error.ApiError;
 import ee.nutrionista.infrastructure.exception.BadCredentialsException;
+import lombok.NonNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
@@ -26,9 +27,9 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(
             MethodArgumentNotValidException ex,
-            org.springframework.http.HttpHeaders headers,
-            HttpStatusCode status,
-            WebRequest request) {
+            @NonNull  org.springframework.http.HttpHeaders headers,
+            @NonNull HttpStatusCode status,
+            @NonNull WebRequest request) {
         FieldError firstError = ex.getBindingResult().getFieldErrors().get(0);
         ApiError apiError = new ApiError();
         apiError.setMessage(firstError.getField() + ": " + firstError.getDefaultMessage());
