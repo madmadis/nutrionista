@@ -226,3 +226,15 @@ CREATE TABLE order_item (
                             CONSTRAINT order_item_nutrient
                                 FOREIGN KEY (nutrient_id) REFERENCES nutrient (id)
 );
+
+-- -------------------------------------------------------------
+-- 17. feedback
+-- -------------------------------------------------------------
+CREATE TABLE feedback (
+                          id         SERIAL          NOT NULL,
+                          name       VARCHAR(255)    NOT NULL,
+                          email      VARCHAR(255)    NOT NULL,
+                          message    TEXT            NOT NULL,
+                          created_at TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                          CONSTRAINT feedback_pk PRIMARY KEY (id)
+);
