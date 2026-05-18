@@ -18,12 +18,12 @@ public class FeedbackController {
     }
 
     @PostMapping
-    public ResponseEntity<Void> submit(@Valid @RequestBody FeedbackDto dto) {
+    public void submit(@Valid @RequestBody FeedbackDto dto) {
         Feedback feedback = new Feedback();
         feedback.setName(dto.getName());
         feedback.setEmail(dto.getEmail());
         feedback.setMessage(dto.getMessage());
         feedbackRepository.save(feedback);
-        return ResponseEntity.ok().build();
+
     }
 }
