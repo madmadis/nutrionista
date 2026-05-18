@@ -42,6 +42,9 @@ dependencies {
 
     // SQL with parameter values
     implementation 'p6spy:p6spy:3.9.1'
+
+    // BCrypt password hashing (used by AuthService in task_page_2)
+    implementation 'org.mindrot:jbcrypt:0.4'
 }
 
 compileJava {

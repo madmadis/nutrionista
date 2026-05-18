@@ -44,7 +44,7 @@ The project is built by a 3-person student team. The primary success criteria ar
 | Database     | PostgreSQL                            | Render (free)     |
 | DB workflow  | Manual init scripts in `docs/database/` (`1_reset_database.sql` → `2_create.sql` → `3_import.sql`). Flyway is **not yet adopted** — see §10. | Run manually on each laptop |
 
-**No authentication library.** `jBCrypt` and Spring Security are deliberately omitted — see §6.
+**No auth framework.** Spring Security is deliberately omitted; `jBCrypt` stays on the classpath solely so `AuthService` can verify seeded password hashes via `BCrypt.checkpw` — see §6.
 
 ## 4. Architecture
 
