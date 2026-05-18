@@ -6,7 +6,6 @@ import ee.nutrionista.infrastructure.exception.BadCredentialsException;
 import ee.nutrionista.persistence.user.User;
 import ee.nutrionista.persistence.user.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 
 import static ee.nutrionista.infrastructure.error.ErrorResponse.INCORRECT_CREDENTIALS;

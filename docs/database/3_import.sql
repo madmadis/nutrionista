@@ -1,3 +1,5 @@
+SET search_path TO nutrionista;
+
 INSERT INTO role (id, name)
 VALUES
     (1, 'ADMIN'),
@@ -9,7 +11,7 @@ VALUES
     (2, 'RED',    '#D50000'),
     (3, 'YELLOW', '#FFD600');
 
-INSERT INTO "user" (id, email, password_hash, role_id)
+INSERT INTO "user" (id, email, password, role_id)
 VALUES
     (1, 'admin@nutrionista.ee',   'admin123', 1),
     (2, 'jaan.tamm@mail.ee',      'jaan123', 2),
