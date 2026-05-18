@@ -30,7 +30,7 @@ public class User {
 
     @Size(max = 60)
     @NotNull
-    @Column(name = "password_hash", nullable = false)
-    private String passwordHash;
+    @Column(name = "password", nullable = false)
+    private String password;
 
 }

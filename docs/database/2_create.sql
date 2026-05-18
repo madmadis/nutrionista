@@ -3,6 +3,8 @@
 -- Engine: PostgreSQL 18
 -- =============================================================
 
+SET search_path TO nutrionista;
+
 -- -------------------------------------------------------------
 -- 1. category
 -- -------------------------------------------------------------
@@ -134,7 +136,7 @@ CREATE TABLE nutrient_property (
 CREATE TABLE "user" (
                         id            SERIAL          NOT NULL,
                         email         VARCHAR(50)     NOT NULL,
-                        password_hash VARCHAR(60)     NOT NULL,
+                        password      VARCHAR(60)     NOT NULL,
                         created_at    TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
                         role_id       INT             NOT NULL,
                         CONSTRAINT user_pk          PRIMARY KEY (id),

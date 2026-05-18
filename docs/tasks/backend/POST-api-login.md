@@ -28,7 +28,7 @@ LoginView on sisselogimise leht, kus kasutaja sisestab e-posti aadressi ja paroo
 | Väli | Tüüp | Kirjeldus |
 |------|------|-----------|
 | `email` | `String` | Kasutaja e-posti aadress |
-| `password` | `String` | Kasutaja parool (plaintext, BCrypt kontroll teenuses) |
+| `password` | `String` | Kasutaja parool (plaintext) |
 
 ### Response Body — `LoginResponseDto.java`
 
