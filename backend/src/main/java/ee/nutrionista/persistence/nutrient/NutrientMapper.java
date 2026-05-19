@@ -4,6 +4,8 @@ import ee.nutrionista.controller.nutrient.dto.NutrientDto;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
+import java.util.List;
+
 @Mapper(componentModel = "spring")
 public interface NutrientMapper {
 
@@ -15,5 +17,7 @@ public interface NutrientMapper {
     @Mapping(source = "price", target = "price")
     @Mapping(source = "stockQuantity", target = "stockQuantity")
     NutrientDto toNutrientDto(Nutrient nutrient);
+
+    List<NutrientDto> toNutrientDtos(List<Nutrient> nutrients);
 
 }

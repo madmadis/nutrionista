@@ -1,6 +1,7 @@
 package ee.nutrionista.service;
 
 import ee.nutrionista.controller.nutrient.dto.NutrientDto;
+import ee.nutrionista.persistence.nutrient.Nutrient;
 import ee.nutrionista.persistence.nutrient.NutrientMapper;
 import ee.nutrionista.persistence.nutrient.NutrientRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,10 +16,8 @@ public class NutrientService {
     private final NutrientRepository nutrientRepository;
     private final NutrientMapper nutrientMapper;
 
-    public List<NutrientDto> findAllNutrients() {
-        return nutrientRepository.findAll()
-                .stream()
-                .map(nutrientMapper::toNutrientDto)
-                .toList();
+    public List<NutrientDto> findNutrients(Integer categoryId) {
+        List<Nutrient> nutrients = nutrientRepository.findNutrientsBy(categoryId);
+        return nutrientMapper.toNutrientDtos(nutrients);
     }
 }

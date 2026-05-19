@@ -1,6 +1,7 @@
 package ee.nutrionista.service;
 
 import ee.nutrionista.controller.category.dto.CategoryDto;
+import ee.nutrionista.persistence.category.Category;
 import ee.nutrionista.persistence.category.CategoryMapper;
 import ee.nutrionista.persistence.category.CategoryRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,9 +17,7 @@ public class CategoryService {
     private final CategoryMapper categoryMapper;
 
     public List<CategoryDto> findAllCategories() {
-        return categoryRepository.findAll()
-                .stream()
-                .map(categoryMapper::toDto)
-                .toList();
+        List<Category> categories = categoryRepository.findAll();
+        return categoryMapper.toCategoryDtos(categories);
     }
 }

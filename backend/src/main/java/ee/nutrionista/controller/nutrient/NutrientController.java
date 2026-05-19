@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -18,7 +19,7 @@ public class NutrientController {
 
     @GetMapping("/nutrients")
     @Operation(summary = "Kõikide ainete loetelu")
-    public List<NutrientDto> findAllNutrients() {
-        return nutrientService.findAllNutrients();
+    public List<NutrientDto> findNutrients(@RequestParam Integer categoryId) {
+        return nutrientService.findNutrients(categoryId);
     }
 }

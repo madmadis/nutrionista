@@ -1,6 +1,7 @@
 package ee.nutrionista.service;
 
 import ee.nutrionista.controller.blog.dto.BlogArticleDto;
+import ee.nutrionista.persistence.blog.BlogArticle;
 import ee.nutrionista.persistence.blog.BlogArticleMapper;
 import ee.nutrionista.persistence.blog.BlogArticleRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,9 +17,7 @@ public class BlogArticleService {
     private final BlogArticleMapper blogArticleMapper;
 
     public List<BlogArticleDto> findAllBlogArticles() {
-        return blogArticleRepository.findAll()
-                .stream()
-                .map(blogArticleMapper::toDto)
-                .toList();
+        List<BlogArticle> blogArticles = blogArticleRepository.findAll();
+        return blogArticleMapper.toBlogArticleDtos(blogArticles);
     }
 }
