@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "title": "C-vitamiin ja immuunsüsteem",
+    "summary": "Lühike kokkuvõte artikli sisust, et anda lugejale kiire ülevaade teemast.",
+    "imageUrl": "https://placehold.co/400x300"
+  },
+  {
+    "id": 2,
+    "title": "Magneesium ja uni",
+    "summary": "Lühike kokkuvõte artikli sisust, et anda lugejale kiire ülevaade teemast.",
+    "imageUrl": "https://placehold.co/400x300"
+  },
+  {
+    "id": 3,
+    "title": "D-vitamiin talvel",
+    "summary": "Lühike kokkuvõte artikli sisust, et anda lugejale kiire ülevaade teemast.",
+    "imageUrl": "https://placehold.co/400x300"
+  }
+]

@@ -18,5 +18,4 @@ public class NutrientDto {
     private Category category;
     private BigDecimal price;
     private Integer stock_quantity;
-
 }
