@@ -1,35 +1,35 @@
 package ee.nutrionista.persistence.feedback;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.Setter;
 
-import java.time.LocalDateTime;
-
+@Getter
+@Setter
 @Entity
-@Table(name = "feedback")
-@Data
-@NoArgsConstructor
+@Table(name = "feedback", schema = "nutrionista")
 public class Feedback {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "id", nullable = false)
+    private Integer id;
 
-    @Column(nullable = false)
+    @Size(max = 255)
+    @NotNull
+    @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(nullable = false)
+    @Size(max = 255)
+    @NotNull
+    @Column(name = "email", nullable = false)
     private String email;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Size(max = 2000)
+    @NotNull
+    @Column(name = "message", nullable = false)
     private String message;
 
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
-
-    @PrePersist
-    public void prePersist() {
-        createdAt = LocalDateTime.now();
-    }
 }

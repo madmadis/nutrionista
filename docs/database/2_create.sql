@@ -253,7 +253,7 @@ CREATE TABLE feedback
     id         SERIAL       NOT NULL,
     name       VARCHAR(255) NOT NULL,
     email      VARCHAR(255) NOT NULL,
-    message    TEXT         NOT NULL,
+    message    VARCHAR(2000)         NOT NULL,
     created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT feedback_pk PRIMARY KEY (id)
 );

@@ -344,11 +344,11 @@ VALUES
 (5, 3, 2, 14.50, 1, 14.50),
 (6, 3, 10, 8.95, 1, 8.95);
 
-INSERT INTO feedback (id, name, email, message)
+INSERT INTO feedback (name, email, message)
 VALUES
-    (1, 'Mari Mets',    'mari.mets@gmail.com',    'Väga hea valik tooteid! Vitamiin D3 jõudis kätte kiiresti.'),
-    (2, 'Jaan Tamm',    'jaan.tamm@hot.ee',       'Magneesium aitas une kvaliteeti parandada. Soovitan!'),
-    (3, 'Kati Kask',    'kati.kask@mail.ee',      'Kas plaanite lisada ka oomega-3 tooteid? Oleks väga vajalik.');
+    ('Mari Mets', 'mari.mets@gmail.com', 'Väga hea valik tooteid! Vitamiin D3 jõudis kätte kiiresti.'),
+    ('Jaan Tamm', 'jaan.tamm@hot.ee', 'Magneesium aitas une kvaliteeti parandada. Soovitan!'),
+    ('Kati Kask', 'kati.kask@mail.ee', 'Kas plaanite lisada ka oomega-3 tooteid? Oleks väga vajalik.');
 
 INSERT INTO nutrient_image (nutrient_id, image_url)
 VALUES

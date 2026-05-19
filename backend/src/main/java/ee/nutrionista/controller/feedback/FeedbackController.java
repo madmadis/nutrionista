@@ -1,29 +1,23 @@
 package ee.nutrionista.controller.feedback;
 
 import ee.nutrionista.controller.feedback.dto.FeedbackDto;
-import ee.nutrionista.persistence.feedback.Feedback;
-import ee.nutrionista.persistence.feedback.FeedbackRepository;
-import jakarta.validation.Valid;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import ee.nutrionista.service.FeedbackService;
+import io.swagger.v3.oas.annotations.Operation;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/feedback")
+@RequestMapping("/api")
+@RequiredArgsConstructor
 public class FeedbackController {
+    private final FeedbackService feedbackService;
 
-    private final FeedbackRepository feedbackRepository;
-
-    public FeedbackController(FeedbackRepository feedbackRepository) {
-        this.feedbackRepository = feedbackRepository;
-    }
-
-    @PostMapping
-    public void submit(@Valid @RequestBody FeedbackDto dto) {
-        Feedback feedback = new Feedback();
-        feedback.setName(dto.getName());
-        feedback.setEmail(dto.getEmail());
-        feedback.setMessage(dto.getMessage());
-        feedbackRepository.save(feedback);
-
+    @PostMapping("/feedback")
+    @Operation(summary = "Tagasiside")
+    public void save(@RequestBody FeedbackDto dto) {
+        feedbackService.save(dto);
     }
 }
