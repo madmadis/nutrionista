@@ -18,7 +18,7 @@ public class NutrientController {
 
     @GetMapping("/nutrients")
     @Operation(summary = "Kõikide ainete loetelu")
-    public List<NutrientDto> all() {
+    public List<NutrientDto> findAllNutrients() {
         return nutrientService.findAllNutrients();
     }
 }

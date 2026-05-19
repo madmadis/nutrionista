@@ -18,7 +18,7 @@ public class CategoryController {
 
     @GetMapping("/categories")
     @Operation(summary = "Kategooriad")
-    public List<CategoryDto> all() {
+    public List<CategoryDto> findAllCategories() {
         return categoryService.findAllCategories();
     }
 }
