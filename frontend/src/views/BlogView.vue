@@ -35,7 +35,7 @@ export default {
   },
   methods: {
     getArticles() {
-      api.get('/blog-posts')
+      api.get('/blog')
         .then((response) => this.handleGetArticlesResponse(response.data))
         .catch(() => this.handleGetArticlesError())
         .finally(() => { this.loading = false })

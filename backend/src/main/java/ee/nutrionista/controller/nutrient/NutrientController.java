@@ -1,5 +1,6 @@
-package ee.nutrionista.controller.nutrient.dto;
+package ee.nutrionista.controller.nutrient;
 
+import ee.nutrionista.controller.nutrient.dto.NutrientDto;
 import ee.nutrionista.service.NutrientService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
