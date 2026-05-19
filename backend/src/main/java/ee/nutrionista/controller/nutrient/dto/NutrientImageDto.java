@@ -13,6 +13,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class NutrientImageDto {
-    private Integer id;
+    private Integer nutrientImageId;
     private String imageUrl;
 }

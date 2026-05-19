@@ -2,6 +2,7 @@ package ee.nutrionista.infrastructure;
 
 import ee.nutrionista.infrastructure.error.ApiError;
 import ee.nutrionista.infrastructure.exception.BadCredentialsException;
+import ee.nutrionista.infrastructure.exception.CartNotFoundException;
 import ee.nutrionista.infrastructure.exception.NutrientNotFoundException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.NonNull;
@@ -20,6 +21,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 @ControllerAdvice
 public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 
+    // TODO: 1 abstraktne baasklass, mida kõik exceptionid laiendaksid, et piisaks ühest handlerist
     @ExceptionHandler
     public ResponseEntity<ApiError> handleBadCredentialsException(BadCredentialsException exception) {
         ApiError apiError = new ApiError();
@@ -33,6 +35,14 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         ApiError apiError = new ApiError();
         apiError.setMessage(nutrientNotFoundException.getMessage());
         apiError.setErrorCode(nutrientNotFoundException.getErrorCode());
+        return new ResponseEntity<>(apiError, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ApiError> handleCartNotFoundException(CartNotFoundException cartNotFoundException) {
+        ApiError apiError = new ApiError();
+        apiError.setMessage(cartNotFoundException.getMessage());
+        apiError.setErrorCode(cartNotFoundException.getErrorCode());
         return new ResponseEntity<>(apiError, HttpStatus.NOT_FOUND);
     }
 

@@ -6,6 +6,7 @@ import lombok.Getter;
 public enum ErrorResponse {
     INCORRECT_CREDENTIALS("Vale email või parool", 401),
     NUTRIENT_NOT_FOUND("Toodet ei leitud", 404),
+    CART_NOT_FOUND("Ostukorvi ei leitud", 404)
     ;
 
     private final String message;

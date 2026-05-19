@@ -1,0 +1,14 @@
+{
+  "cartId": 0,
+  "userId": 0,
+  "items": [
+    {
+      "cartItemId": 0,
+      "nutrientId": 0,
+      "name": "string",
+      "price": 0.0,
+      "imageId": 0,
+      "quantity": 0
+    }
+  ]
+}

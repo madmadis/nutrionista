@@ -1,0 +1,22 @@
+{
+  "cartId": 1,
+  "userId": 3,
+  "items": [
+    {
+      "cartItemId": 1,
+      "nutrientId": 2,
+      "name": "Vitamiin C 1000mg",
+      "price": 12.50,
+      "imageId": 4,
+      "quantity": 2
+    },
+    {
+      "cartItemId": 2,
+      "nutrientId": 5,
+      "name": "Magneesium 300mg",
+      "price": 8.90,
+      "imageId": 9,
+      "quantity": 1
+    }
+  ]
+}
