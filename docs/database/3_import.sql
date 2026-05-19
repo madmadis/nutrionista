@@ -364,3 +364,18 @@ VALUES
      'https://placehold.co/400x300'),
     ('D-vitamiin talvel', 'Talvekuudel on D-vitamiini tase sageli madal — mida see tähendab tervisele?', 'D-vitamiin sünteesitakse nahas päikesevalguse toimel, mistõttu talvekuudel võib selle tase
   langeda...', 'https://placehold.co/400x300');
+
+INSERT INTO faq_item (section, question, answer)
+VALUES
+    ('Vitamiinide kohta', 'Mis on vitamiinid ja miks need on olulised?', 'Vitamiinid on orgaanilised ühendid, mida organism vajab normaalseks kasvuks ja toimimiseks. Need on olulised ainevahetuses,
+  immuunsüsteemi toetamisel ja rakkude kaitsel.'),
+    ('Vitamiinide kohta', 'Kuidas valida õigeid vitamiine?', 'Õigete vitamiinide valik sõltub teie individuaalsetest vajadustest, toitumisest ja elustiilist. Soovitame konsulteerida arsti või
+  toitumisnõustajaga.'),
+    ('Annuste kohta', 'Millised on soovitatavad vitamiiniannused?', 'Soovitatavad annused varieeruvad sõltuvalt vitamiinist, vanusest, soost ja tervislikust seisundist. Järgige alati toote etiketil
+  olevaid juhiseid.'),
+    ('Annuste kohta', 'Kas vitamiine on võimalik üle doseerida?', 'Jah, teatud vitamiine (eriti rasvalahustuvaid) liigne tarbimine võib olla kahjulik. Olge ettevaatlik ja ärge ületage soovitatud
+  annuseid.'),
+    ('Raseduse ja imetamise ajal', 'Millised vitamiine on raseduse ajal vaja?', 'Raseduse ajal on eriti olulised foolhape, raud, kaltsium ja D-vitamiin. Enne vitamiinide võtmist konsulteerige
+  kindlasti oma arstiga.'),
+    ('Tellimise kohta', 'Kuidas ma saan tellimust esitada?', 'Saate tellimuse esitada meie veebipoes, lisades soovitud tooted ostukorvi ja järgides maksejuhiseid.'),
+    ('Tellimise kohta', 'Millised on tarneajad ja -kulud?', 'Tarneajad ja -kulud sõltuvad teie asukohast ja valitud tarneviisist. Täpsema info leiate meie tarneinfo lehelt.');

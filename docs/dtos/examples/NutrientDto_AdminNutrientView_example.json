@@ -1,0 +1,11 @@
+{
+  "id": 1,
+  "name": "Vitamiin A",
+  "description": "Oluline nägemisele, immuunsusele ja naha tervisele.",
+  "category": {
+    "id": 1,
+    "name": "Rasvlahustuv"
+  },
+  "price": 9.99,
+  "stock_quantity": 8
+}

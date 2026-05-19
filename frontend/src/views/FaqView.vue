@@ -46,7 +46,7 @@ export default {
   },
   methods: {
     getFaqItems() {
-      api.get('/faq-items')
+      api.get('/faq')
         .then((response) => this.handleGetFaqItemsResponse(response.data))
         .catch(() => this.handleGetFaqItemsError())
         .finally(() => { this.loading = false })

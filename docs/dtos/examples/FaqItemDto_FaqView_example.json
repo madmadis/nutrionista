@@ -1,0 +1,26 @@
+[
+{
+  "id": 1,
+  "section": "Vitamiinide kohta",
+  "question": "Mis on vitamiinid ja miks need on olulised?",
+  "answer": "Vitamiinid on orgaanilised ühendid, mida organism vajab normaalseks kasvuks ja toimimiseks. Need on olulised ainevahetuses,immuunsüsteemi toetamisel ja rakkude kaitsel."
+},
+  {
+    "id": 3,
+    "section": "Annuste kohta",
+    "question": "Millised on soovitatavad vitamiiniannused?",
+    "answer": "Soovitatavad annused varieeruvad sõltuvalt vitamiinist, vanusest, soost ja tervislikust seisundist. Järgige alati toote etiketil olevaid juhiseid."
+  },
+  {
+    "id": 5,
+    "section": "Raseduse ja imetamise ajal",
+    "question": "Millised vitamiine on raseduse ajal vaja?",
+    "answer": "Raseduse ajal on eriti olulised foolhape, raud, kaltsium ja D-vitamiin. Enne vitamiinide võtmist konsulteerige kindlasti oma arstiga."
+  },
+  {
+    "id": 6,
+    "section": "Tellimise kohta",
+    "question": "Kuidas ma saan tellimust esitada?",
+    "answer": "Saate tellimuse esitada meie veebipoes, lisades soovitud tooted ostukorvi ja järgides maksejuhiseid."
+  }
+]

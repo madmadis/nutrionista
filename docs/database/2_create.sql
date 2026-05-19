@@ -259,7 +259,7 @@ CREATE TABLE feedback
 );
 
 -- -------------------------------------------------------------
--- 18. blog
+-- 18. blog_article
 -- -------------------------------------------------------------
 CREATE TABLE blog_article
 (
@@ -268,5 +268,18 @@ CREATE TABLE blog_article
     summary    VARCHAR(500),
     content    VARCHAR(5000),
     image_url  VARCHAR(1000),
-    created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
-)
+    created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT blog_article_pk PRIMARY KEY (id)
+);
+
+-- -------------------------------------------------------------
+-- 19. faq_item
+-- -------------------------------------------------------------
+CREATE TABLE faq_item
+(
+    id       SERIAL        NOT NULL,
+    section  VARCHAR(255)  NOT NULL,
+    question VARCHAR(500)  NOT NULL,
+    answer   VARCHAR(2000) NOT NULL,
+    CONSTRAINT faq_item_pk PRIMARY KEY (id)
+);
