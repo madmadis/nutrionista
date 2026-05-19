@@ -2,6 +2,7 @@ package ee.nutrionista.infrastructure;
 
 import ee.nutrionista.infrastructure.error.ApiError;
 import ee.nutrionista.infrastructure.exception.BadCredentialsException;
+import ee.nutrionista.infrastructure.exception.NutrientNotFoundException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +26,14 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         apiError.setMessage(exception.getMessage());
         apiError.setErrorCode(exception.getErrorCode());
         return new ResponseEntity<>(apiError, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ApiError> handleNutrientNotFoundException(NutrientNotFoundException nutrientNotFoundException) {
+        ApiError apiError = new ApiError();
+        apiError.setMessage(nutrientNotFoundException.getMessage());
+        apiError.setErrorCode(nutrientNotFoundException.getErrorCode());
+        return new ResponseEntity<>(apiError, HttpStatus.NOT_FOUND);
     }
 
     @Override

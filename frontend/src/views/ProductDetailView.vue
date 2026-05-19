@@ -20,7 +20,7 @@
         <div class="md:w-1/2 space-y-8">
           <div>
             <h2 class="text-xl font-bold text-[#333333] mb-4">Kategooria</h2>
-            <p class="text-[#555555]">{{ product.category?.name || '—' }}</p>
+            <p class="text-[#555555]">{{ product.categoryName || '—' }}</p>
           </div>
           <div>
             <h2 class="text-xl font-bold text-[#333333] mb-4">Kirjeldus</h2>

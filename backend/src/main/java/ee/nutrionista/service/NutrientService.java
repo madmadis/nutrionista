@@ -4,6 +4,7 @@ import ee.nutrionista.controller.nutrient.dto.NutrientDto;
 import ee.nutrionista.persistence.nutrient.Nutrient;
 import ee.nutrionista.persistence.nutrient.NutrientMapper;
 import ee.nutrionista.persistence.nutrient.NutrientRepository;
+import ee.nutrionista.infrastructure.exception.NutrientNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -19,5 +20,10 @@ public class NutrientService {
     public List<NutrientDto> findNutrients(Integer categoryId) {
         List<Nutrient> nutrients = nutrientRepository.findNutrientsBy(categoryId);
         return nutrientMapper.toNutrientDtos(nutrients);
+    }
+    public NutrientDto findNutrientById(Integer id) {
+        Nutrient nutrient = nutrientRepository.findById(id)
+                .orElseThrow(NutrientNotFoundException::new);
+        return nutrientMapper.toNutrientDto(nutrient);
     }
 }
