@@ -2,7 +2,9 @@ package ee.nutrionista.infrastructure;
 
 import ee.nutrionista.infrastructure.error.ApiError;
 import ee.nutrionista.infrastructure.exception.BadCredentialsException;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+@Slf4j
 @ControllerAdvice
 public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 
@@ -36,4 +39,29 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         apiError.setErrorCode(400);
         return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
     }
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<ApiError> handleEntityNotFound(EntityNotFoundException exception) {
+        ApiError apiError = new ApiError();
+
+        String message;
+        if (exception.getMessage() != null) {
+            message = exception.getMessage();
+        } else {
+            message = "Andmeid ei leitud";
+        }
+        apiError.setMessage(message);
+
+        apiError.setErrorCode(404);
+        return new ResponseEntity<>(apiError, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<ApiError> handleRuntime(RuntimeException exception) {
+        log.error("Unhandled runtime exception", exception);
+        ApiError apiError = new ApiError();
+        apiError.setMessage("Sisemine viga");
+        apiError.setErrorCode(500);
+        return new ResponseEntity<>(apiError, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
 }
