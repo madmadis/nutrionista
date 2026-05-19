@@ -5,7 +5,6 @@ import ee.nutrionista.infrastructure.exception.CartNotFoundException;
 import ee.nutrionista.persistence.cart.Cart;
 import ee.nutrionista.persistence.cart.CartMapper;
 import ee.nutrionista.persistence.cart.CartRepository;
-import ee.nutrionista.persistence.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
