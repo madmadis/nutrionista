@@ -18,7 +18,7 @@ public class NutrientService {
     public List<NutrientDto> findAllNutrients() {
         return nutrientRepository.findAll()
                 .stream()
-                .map(nutrientMapper::toDto)
+                .map(nutrientMapper::toNutrientDto)
                 .toList();
     }
 }

@@ -6,8 +6,10 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.ColumnDefault;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 
 @Getter
 @Setter
@@ -22,11 +24,11 @@ public class Nutrient {
 
     @Size(max = 100)
     @NotNull
-    @Column(name = "name", nullable = false)
+    @Column(name = "name", nullable = false, length = 100)
     private String name;
 
     @Size(max = 500)
-    @Column(name = "description")
+    @Column(name = "description", length = 500)
     private String description;
 
     @NotNull
@@ -35,10 +37,23 @@ public class Nutrient {
     private Category category;
 
     @NotNull
+    @Column(name = "price", nullable = false, precision = 8, scale = 2)
     private BigDecimal price;
 
     @NotNull
-    private Integer stock_quantity;
+    @Column(name = "stock_quantity", nullable = false)
+    private Integer stockQuantity;
+
+    @NotNull
+    @ColumnDefault("CURRENT_TIMESTAMP")
+    @Column(name = "created_at", nullable = false)
+    private Instant createdAt;
+
+    @NotNull
+    @ColumnDefault("CURRENT_TIMESTAMP")
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt;
+
 
 
 }

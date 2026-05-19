@@ -15,7 +15,7 @@ public class NutrientDto {
     private Integer nutrientId;
     private String name;
     private String description;
-    private Category category;
+    private String  categoryName;
     private BigDecimal price;
     private Integer stockQuantity;
 }
