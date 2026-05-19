@@ -12,10 +12,10 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 
 public class NutrientDto {
-    private Integer id;
+    private Integer nutrientId;
     private String name;
     private String description;
     private Category category;
     private BigDecimal price;
-    private Integer stock_quantity;
+    private Integer stockQuantity;
 }

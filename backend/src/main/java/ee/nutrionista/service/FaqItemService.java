@@ -15,7 +15,7 @@ public class FaqItemService {
     private final FaqItemRepository faqItemRepository;
     private final FaqItemMapper faqItemMapper;
 
-    public List<FaqItemDto> all() {
+    public List<FaqItemDto> findAllFaq() {
         return faqItemRepository.findAll()
                 .stream()
                 .map(faqItemMapper::toDto)

@@ -19,6 +19,6 @@ public class BlogArticleController {
     @GetMapping("/blog")
     @Operation(summary = "Blogipostitused")
     public List<BlogArticleDto> all() {
-        return blogArticleService.all();
+        return blogArticleService.findAllBlogArticles();
     }
 }

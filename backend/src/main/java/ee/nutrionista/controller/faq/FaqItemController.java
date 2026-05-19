@@ -19,6 +19,6 @@ public class FaqItemController {
     @GetMapping("/faq")
     @Operation(summary = "Korduma kippuvad küsimused")
     public List<FaqItemDto> all() {
-        return faqItemService.all();
+        return faqItemService.findAllFaq();
     }
 }

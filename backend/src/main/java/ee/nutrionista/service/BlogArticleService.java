@@ -15,7 +15,7 @@ public class BlogArticleService {
     private final BlogArticleRepository blogArticleRepository;
     private final BlogArticleMapper blogArticleMapper;
 
-    public List<BlogArticleDto> all() {
+    public List<BlogArticleDto> findAllBlogArticles() {
         return blogArticleRepository.findAll()
                 .stream()
                 .map(blogArticleMapper::toDto)

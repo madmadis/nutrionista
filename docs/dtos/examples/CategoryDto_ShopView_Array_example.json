@@ -1,0 +1,12 @@
+[
+  {
+    "categoryId": 1,
+    "name": "Rasvlahustuv",
+    "description": "Lahustub rasvades"
+  },
+  {
+    "categoryId": 2,
+    "name": "Vesilahustuv",
+    "description": "Lahustub vees"
+  }
+]
